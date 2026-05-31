@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Ayu Mirage — muted mid-dark palette with a cyan accent. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#1F2430"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#191E2A"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#232834"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#2D3441"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#CBCCC6"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#707A8C"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#5CCFE6"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#2D3441"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#232834"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#BAE67E"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#FFD580"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#FFA759"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#FF6666"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#FF6666"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#E04F4F"/>
+</ResourceDictionary>

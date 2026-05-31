@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Mercury. Adapted from the OpenCode theme of the same name; surface shades derived from the base. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#171721"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#0F0F19"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#25252F"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#2F2F39"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#dddde5"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#9d9da8"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#8da4f5"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#3F3F49"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#3F3F49"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#77c599"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#fc9b6f"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#FC9692"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#fc92b4"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#fc92b4"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#D46A8C"/>
+</ResourceDictionary>

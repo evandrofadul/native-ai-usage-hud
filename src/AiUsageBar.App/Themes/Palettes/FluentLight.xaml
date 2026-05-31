@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Fluent Light — Windows 11 / WinUI light palette (Fluent design tokens). -->
+    <!-- SolidBackgroundFillColorBase / LayerFill / ControlFill / subtle hover -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#EAEAEA"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#FBFBFB"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#EDEDED"/>
+    <!-- TextFillColorPrimary / Secondary -->
+    <SolidColorBrush x:Key="FgBrush"          Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#5C5C5C"/>
+    <!-- Accent: SystemAccentColorDark1 (Windows 11 default blue on light) -->
+    <SolidColorBrush x:Key="AccentBrush"      Color="#005FB8"/>
+    <!-- CardStrokeColorDefault / divider -->
+    <SolidColorBrush x:Key="BorderBrush"      Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#E5E5E5"/>
+
+    <!-- System fill colors (light) -->
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#0F7B0F"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#9D5D00"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#C4500B"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#C42B1C"/>
+
+    <!-- Windows 11 caption close button -->
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#C42B1C"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#A52317"/>
+</ResourceDictionary>

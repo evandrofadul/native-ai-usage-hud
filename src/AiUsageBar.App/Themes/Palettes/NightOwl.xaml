@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Night Owl — deep navy dark palette tuned for low light. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#011627"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#010E1A"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#0B2942"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#1D3B53"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#D6DEEB"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#5F7E97"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#82AAFF"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#1D3B53"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#0B2942"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#22DA6E"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#ECC48D"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#F78C6C"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#EF5350"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#EF5350"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#C9302C"/>
+</ResourceDictionary>

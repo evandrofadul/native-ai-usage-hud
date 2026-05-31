@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- AMOLED. Adapted from the OpenCode theme of the same name; surface shades derived from the base. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#000000"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#000000"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#0E0E0E"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#181818"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#ffffff"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#6B6B6B"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#b388ff"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#282828"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#282828"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#00ff88"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#ffea00"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#FF8022"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#ff1744"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#ff1744"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#D7001C"/>
+</ResourceDictionary>

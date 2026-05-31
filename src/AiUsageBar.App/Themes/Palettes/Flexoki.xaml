@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Flexoki. Adapted from the OpenCode theme of the same name; surface shades derived from the base. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#100f0f"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#080707"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#1E1D1D"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#282727"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#cecdc3"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#6f6e69"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#da702c"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#383737"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#383737"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#879a39"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#da702c"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#D65E36"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#d14d41"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#d14d41"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#A92519"/>
+</ResourceDictionary>

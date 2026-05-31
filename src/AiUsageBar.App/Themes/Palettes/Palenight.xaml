@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Palenight. Adapted from the OpenCode theme of the same name; surface shades derived from the base. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#292d3e"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#212536"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#373B4C"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#414556"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#a6accd"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#676e95"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#82aaff"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#515566"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#515566"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#c3e88d"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#ffcb6b"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#F89E72"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#f07178"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#f07178"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#C84950"/>
+</ResourceDictionary>

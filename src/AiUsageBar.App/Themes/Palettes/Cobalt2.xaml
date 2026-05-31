@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Cobalt2 — deep blue background with a bold yellow accent. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#193549"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#122738"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#1F4662"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#234E6D"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#E1EFFF"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#627E97"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#FFC600"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#234E6D"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#1F4662"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#3AD900"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#FFC600"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#FF9D00"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#FF628C"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#FF628C"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#E04A72"/>
+</ResourceDictionary>

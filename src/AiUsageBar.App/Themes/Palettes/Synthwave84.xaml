@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Synthwave '84 — retro neon dark palette with a magenta accent. -->
+    <SolidColorBrush x:Key="BgBrush"          Color="#262335"/>
+    <SolidColorBrush x:Key="Bg2Brush"         Color="#1E1A2B"/>
+    <SolidColorBrush x:Key="Bg3Brush"         Color="#2A2640"/>
+    <SolidColorBrush x:Key="HoverBrush"       Color="#34294F"/>
+    <SolidColorBrush x:Key="FgBrush"          Color="#F8F8F2"/>
+    <SolidColorBrush x:Key="DimBrush"         Color="#6D6886"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="#FF7EDB"/>
+    <SolidColorBrush x:Key="BorderBrush"      Color="#34294F"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"    Color="#2A2640"/>
+
+    <SolidColorBrush x:Key="SevLowBrush"      Color="#72F1B8"/>
+    <SolidColorBrush x:Key="SevMidBrush"      Color="#FEDE5D"/>
+    <SolidColorBrush x:Key="SevHighBrush"     Color="#FF8B39"/>
+    <SolidColorBrush x:Key="SevCriticalBrush" Color="#FE4450"/>
+
+    <SolidColorBrush x:Key="CloseHoverBrush"   Color="#FE4450"/>
+    <SolidColorBrush x:Key="ClosePressedBrush" Color="#D63647"/>
+</ResourceDictionary>
