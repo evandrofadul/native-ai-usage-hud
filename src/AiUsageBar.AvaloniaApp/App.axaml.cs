@@ -35,7 +35,7 @@ public partial class App : Application
     private HttpClient? _http;
     private MainViewModel? _vm;
     private MainWindow? _window;
-    private TrayIconService? _tray;
+    private ITrayController? _tray;
 
     /// <summary>True once the user chose Quit, so the window is allowed to actually close.</summary>
     public static bool IsShuttingDown { get; private set; }
@@ -72,7 +72,12 @@ public partial class App : Application
 
             _vm = new MainViewModel(config, cfg => new UsageService(_http, cfg), new AvaloniaDispatcher(), _theme);
             _window = new MainWindow { DataContext = _vm };
-            _tray = new TrayIconService(this, _vm, _theme, ShowWindow, Quit);
+
+            // Per-platform tray: the Win32 head gets the rich styled menu + hover card; every
+            // other OS uses the cross-platform Avalonia TrayIcon (see ITrayController).
+            _tray = OperatingSystem.IsWindows()
+                ? new WindowsTrayController(this, _vm, _theme, ShowWindow, Quit)
+                : new LinuxTrayController(this, _vm, _theme, ShowWindow, Quit);
 
             // Start hidden: only the tray icon is shown at launch. The window opens
             // when the user picks it from the tray. If the tray can't be created,

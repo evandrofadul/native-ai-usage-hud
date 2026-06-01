@@ -1,8 +1,8 @@
 # ai-usagebar-wpf
 
-Windows (WPF) port of `ai-usagebar` — monitors AI plan usage for
+Cross-platform (Avalonia) port of `ai-usagebar` — monitors AI plan usage for
 **Anthropic Claude**, **OpenAI Codex/ChatGPT**, **GitHub Copilot**, **Z.AI (GLM)**
-and **OpenRouter** from the system tray.
+and **OpenRouter** from the system tray. Runs on **Windows** and **Linux**.
 
 It reuses the credentials the official CLIs already wrote to disk (`claude`,
 `codex`, `copilot`/`gh`) and the same undocumented usage endpoints, so there is
@@ -21,13 +21,12 @@ A single window reachable from a **system-tray icon**:
 
 ## Layout
 
-Two UI heads (WPF and Avalonia) share the same core and view models:
+The Avalonia head sits on top of a platform-neutral core and shared view models:
 
 ```
 src/
   AiUsageBar.Core/         # platform-neutral core (no UI framework) — all logic + networking
   AiUsageBar.Presentation/ # shared view models + abstractions (IUiDispatcher, IThemeService)
-  AiUsageBar.App/          # WPF head — UI + tray
   AiUsageBar.AvaloniaApp/  # Avalonia head — UI + tray
   AiUsageBar.Core.Tests/   # xUnit suite (ported from the Rust tests)
 ```
@@ -42,18 +41,17 @@ for the 42 theme palettes.
 
 `AiUsageBar.Presentation` holds every view model (`MainViewModel`,
 `VendorTabViewModel`, `SettingsViewModel`, the section/dashboard VMs,
-`ThemeOption`) plus `OpacityManager` and the framework-agnostic abstractions each
-head implements: `IUiDispatcher` (timer) and `IThemeService` (palette swap). Both
-heads are thin — only XAML + framework interop (window chrome, animations, tray,
+`ThemeOption`) plus `OpacityManager` and the framework-agnostic abstractions the
+head implements: `IUiDispatcher` (timer) and `IThemeService` (palette swap). The
+head is thin — only XAML + framework interop (window chrome, animations, tray,
 icon rendering).
 
-### Two heads, same look
+### Hand-rolled theming
 
-The Avalonia head reproduces the WPF UI exactly: the same borderless window,
-tabs, gauges, dashboard/heatmap, settings overlay and palettes. It deliberately
-does **not** use a prebuilt Avalonia theme — `Themes/Controls.axaml` re-templates
-every visible control by hand to match WPF. `Avalonia.Themes.Simple` is included
-only as structural plumbing for controls that aren't drawn directly
+`Themes/Controls.axaml` deliberately does **not** use a prebuilt Avalonia theme —
+it re-templates every visible control by hand (borderless window, tabs, gauges,
+dashboard/heatmap, settings overlay and palettes). `Avalonia.Themes.Simple` is
+included only as structural plumbing for controls that aren't drawn directly
 (`ScrollViewer`/`ItemsControl`), and is fully overridden.
 
 ### Theme palettes (single source of truth)
@@ -63,18 +61,17 @@ C# table and the per-framework dictionaries — never hand-edit the generated fi
 
 ```powershell
 pwsh tools/Generate-Palettes.ps1            # PaletteColors.cs + Avalonia *.axaml
-pwsh tools/Generate-Palettes.ps1 -IncludeWpf  # also regenerate the WPF *.xaml
 ```
 
-## Windows paths
+## Paths
 
-| Purpose            | Path                                                  |
-|--------------------|-------------------------------------------------------|
-| Config             | `%APPDATA%\ai-usagebar\config.toml`                   |
-| Cache (per vendor) | `%LOCALAPPDATA%\ai-usagebar\<vendor>\`                |
-| Anthropic creds    | `%USERPROFILE%\.claude\.credentials.json`             |
-| OpenAI creds       | `%USERPROFILE%\.codex\auth.json`                      |
-| Copilot creds      | Windows Credential Manager (`copilot-cli` / `gh` entry) |
+| Purpose            | Windows                                       | Linux                                  |
+|--------------------|-----------------------------------------------|----------------------------------------|
+| Config             | `%APPDATA%\ai-usagebar\config.toml`           | `~/.config/ai-usagebar/config.toml`    |
+| Cache (per vendor) | `%LOCALAPPDATA%\ai-usagebar\<vendor>\`        | `~/.local/share/ai-usagebar/<vendor>/` |
+| Anthropic creds    | `%USERPROFILE%\.claude\.credentials.json`     | `~/.claude/.credentials.json`          |
+| OpenAI creds       | `%USERPROFILE%\.codex\auth.json`              | `~/.codex/auth.json`                   |
+| Copilot creds      | Windows Credential Manager (`copilot-cli` / `gh`) | `~/.config/gh/hosts.yml` (gh CLI)  |
 
 ## Configuration
 
@@ -93,7 +90,8 @@ enabled = true
 
 [copilot]
 enabled = true
-# oauth_token = "gho_..."   # explicit override; otherwise read from Credential Manager
+# oauth_token = "gho_..."   # explicit override; otherwise read from the OS (Credential
+#                           # Manager on Windows, gh hosts.yml on Linux)
 
 [zai]
 enabled = true
@@ -113,15 +111,41 @@ inline keys, preserving the file's comments and unrelated fields.
 
 ```powershell
 dotnet build
-dotnet test                              # 108 tests
-dotnet run --project src/AiUsageBar.App          # WPF head
+dotnet test                                      # 108 tests
 dotnet run --project src/AiUsageBar.AvaloniaApp  # Avalonia head
 ```
 
-Requires the .NET 10 SDK (the WPF head also needs the Windows Desktop workload).
-Both heads build the tray glyph at runtime and start hidden to the tray.
+Requires the .NET 10 SDK. The app builds the tray glyph at runtime and starts
+hidden to the tray.
 
-## Differences from the Linux original
+### Tray per platform
+
+The tray is split behind `ITrayController`:
+
+- **Windows** (`WindowsTrayController`) — a Win32 `Shell_NotifyIcon` with a fully
+  Avalonia-styled context menu and a rich hover card.
+- **Linux** (`LinuxTrayController`) — Avalonia's cross-platform `TrayIcon` +
+  `NativeMenu`. The StatusNotifierItem model (GNOME/KDE/waybar, over DBus) gives no
+  per-icon hover/move events and lets the desktop shell own the menu, so the hover
+  card and hand-styled menu are Windows-only; Linux gets the native menu (Open /
+  Refresh all / vendor switch / Quit). The "ai" glyph is rendered with Skia
+  (`TrayGlyphRenderer`), so no `System.Drawing` is needed there.
+
+### Native AOT publish
+
+The Avalonia head sets `PublishAot=true`; a self-contained, AOT-compiled binary
+comes out of:
+
+```powershell
+dotnet publish src/AiUsageBar.AvaloniaApp -c Release -r win-x64    # on Windows
+dotnet publish src/AiUsageBar.AvaloniaApp -c Release -r linux-x64  # on Linux
+```
+
+> Native AOT does **not** cross-compile between operating systems — each target
+> must be published **on that OS**. The Linux publish needs `clang` and `zlib`
+> installed (e.g. `apt install clang zlib1g-dev`).
+
+## Differences from the original (Rust / Waybar)
 
 - Tray icon + window instead of the Waybar widget and the terminal TUI.
 - No Omarchy theme integration — ships the One Dark palette.

@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using AiUsageBar.Core.Models;
 using AiUsageBar.Core.Pacing;
 using AiUsageBar.Presentation.Theming;
@@ -23,9 +24,10 @@ namespace AiUsageBar.AvaloniaApp.Tray;
 /// open / refresh / quit); hovering shows a rich card. The glyph is the "ai" badge tinted
 /// by the active vendor's usage severity, re-rendered when the data or palette changes.
 /// This mirrors the WPF tray (custom styled menu + hover card), which Avalonia's built-in
-/// TrayIcon can't provide.
+/// TrayIcon can't provide. The Linux head uses <see cref="LinuxTrayController"/> instead.
 /// </summary>
-public sealed class TrayIconService : IDisposable
+[SupportedOSPlatform("windows")]
+public sealed class WindowsTrayController : ITrayController
 {
     private const int IconSize = 32;
 
@@ -42,7 +44,7 @@ public sealed class TrayIconService : IDisposable
     private Window? _card;
     private TextBlock? _vendorLabel;
 
-    public TrayIconService(Application app, MainViewModel vm, IThemeService theme, Action showWindow, Action quit)
+    public WindowsTrayController(Application app, MainViewModel vm, IThemeService theme, Action showWindow, Action quit)
     {
         _app = app;
         _vm = vm;

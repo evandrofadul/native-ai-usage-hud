@@ -6,9 +6,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The DPI manifest is a Windows concept; only embed it for Windows (and design-time)
+         builds so a linux-x64 publish doesn't carry it. -->
+    <ApplicationManifest Condition="'$(RuntimeIdentifier)' == '' or $(RuntimeIdentifier.StartsWith('win'))">app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <!-- This head is Windows-only (Win32 tray + System.Drawing icon rendering). -->
+    <!-- Cross-platform head. The Win32 tray + System.Drawing icon path is gated to Windows
+         at runtime (WindowsTrayController / OperatingSystem.IsWindows()); CA1416 is silenced
+         because those platform-specific calls are reached only on Windows. -->
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <!-- Native AOT publish. Surfaces trim/AOT analyzer warnings at build time and
          runs the ILC linker on `dotnet publish -r win-x64`. -->
