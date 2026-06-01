@@ -17,7 +17,7 @@ public sealed class OpenAiUsageResponse
     [JsonPropertyName("credits")] public CreditsBlock? Credits { get; set; }
 
     public static OpenAiUsageResponse Parse(byte[] bytes) =>
-        JsonSerializer.Deserialize<OpenAiUsageResponse>(bytes, JsonDefaults.Options) ?? new();
+        JsonSerializer.Deserialize(bytes, AppJsonContext.Default.OpenAiUsageResponse) ?? new();
 
     public OpenAiSnapshot ToSnapshot(string? planHint)
     {

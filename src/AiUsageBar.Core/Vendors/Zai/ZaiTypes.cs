@@ -19,7 +19,7 @@ public sealed class ZaiEnvelope
     [JsonPropertyName("msg")] public string Msg { get; set; } = "";
 
     public static ZaiEnvelope Parse(byte[] bytes) =>
-        JsonSerializer.Deserialize<ZaiEnvelope>(bytes, JsonDefaults.Options) ?? new();
+        JsonSerializer.Deserialize(bytes, AppJsonContext.Default.ZaiEnvelope) ?? new();
 
     public ZaiSnapshot ToSnapshot(string? configPlanTier)
     {

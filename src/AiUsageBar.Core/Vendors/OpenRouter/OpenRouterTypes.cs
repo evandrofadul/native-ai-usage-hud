@@ -49,10 +49,10 @@ public static class OpenRouterMapping
     }
 
     public static CreditsData ParseCredits(string json) =>
-        JsonSerializer.Deserialize<OrEnvelope<CreditsData>>(json, JsonDefaults.Options)?.Data ?? new();
+        JsonSerializer.Deserialize(json, AppJsonContext.Default.OrEnvelopeCreditsData)?.Data ?? new();
 
     public static KeyData ParseKey(string json) =>
-        JsonSerializer.Deserialize<OrEnvelope<KeyData>>(json, JsonDefaults.Options)?.Data ?? new();
+        JsonSerializer.Deserialize(json, AppJsonContext.Default.OrEnvelopeKeyData)?.Data ?? new();
 }
 
 /// <summary>
@@ -83,11 +83,11 @@ public sealed class OpenRouterCacheDto
             IsFreeTier = s.IsFreeTier,
             Limit = s.Limit,
             LimitRemaining = s.LimitRemaining,
-        });
+        }, AppJsonContext.Default.OpenRouterCacheDto);
 
     public static OpenRouterSnapshot Deserialize(byte[] bytes)
     {
-        var d = JsonSerializer.Deserialize<OpenRouterCacheDto>(bytes, JsonDefaults.Options) ?? new();
+        var d = JsonSerializer.Deserialize(bytes, AppJsonContext.Default.OpenRouterCacheDto) ?? new();
         return new OpenRouterSnapshot(d.Label, d.TotalCredits, d.TotalUsage, d.UsageDaily,
             d.UsageWeekly, d.UsageMonthly, d.IsFreeTier, d.Limit, d.LimitRemaining);
     }

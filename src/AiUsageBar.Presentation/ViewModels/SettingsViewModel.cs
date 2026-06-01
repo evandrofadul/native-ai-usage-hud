@@ -1,10 +1,10 @@
-using AiUsageBar.App.Themes;
 using AiUsageBar.Core.Config;
 using AiUsageBar.Core.Models;
+using AiUsageBar.Presentation.Theming;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace AiUsageBar.App.ViewModels;
+namespace AiUsageBar.Presentation.ViewModels;
 
 /// <summary>
 /// Settings dialog — pick the primary vendor and the color theme. (Z.AI / OpenRouter
@@ -17,6 +17,9 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     /// <summary>Theme entries with color swatches for the picker (see <see cref="ThemeOption"/>).</summary>
     public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeOption.All;
+
+    /// <summary>Live-applies the palette swap (framework-specific), injected by the host.</summary>
+    private readonly IThemeService _themeService;
 
     /// <summary>The theme that was active when the dialog opened — restored on Cancel.</summary>
     private readonly ThemeId _originalTheme;
@@ -42,11 +45,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Raised when the user dismisses the dialog without saving.</summary>
     public event EventHandler? Cancelled;
 
-    public SettingsViewModel(AppConfig config)
+    public SettingsViewModel(AppConfig config, IThemeService themeService)
     {
+        _themeService = themeService;
         _primary = config.Ui.Primary ?? VendorId.Anthropic;
         _theme = config.Ui.Theme ?? ThemeId.OneDark;
-        _originalTheme = ThemeManager.Current;
+        _originalTheme = themeService.Current;
 
         _opacity = OpacityManager.Percent;
         _opacityAffectsTray = OpacityManager.AffectsTray;
@@ -55,7 +59,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>Live-preview the theme as soon as the user picks a new one.</summary>
-    partial void OnThemeChanged(ThemeId value) => ThemeManager.Apply(value);
+    partial void OnThemeChanged(ThemeId value) => _themeService.Apply(value);
 
     /// <summary>Live-preview the window transparency as the slider moves.</summary>
     partial void OnOpacityChanged(int value) => OpacityManager.Apply(value, OpacityAffectsTray);
@@ -82,7 +86,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private void Cancel()
     {
         // Discard the live previews if the user backed out.
-        if (ThemeManager.Current != _originalTheme) ThemeManager.Apply(_originalTheme);
+        if (_themeService.Current != _originalTheme) _themeService.Apply(_originalTheme);
         if (OpacityManager.Percent != _originalOpacity || OpacityManager.AffectsTray != _originalOpacityAffectsTray)
             OpacityManager.Apply(_originalOpacity, _originalOpacityAffectsTray);
         Cancelled?.Invoke(this, EventArgs.Empty);

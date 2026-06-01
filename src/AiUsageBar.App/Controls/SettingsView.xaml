@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:AiUsageBar.App.ViewModels"
+             xmlns:vm="clr-namespace:AiUsageBar.Presentation.ViewModels;assembly=AiUsageBar.Presentation"
              xmlns:models="clr-namespace:AiUsageBar.Core.Models;assembly=AiUsageBar.Core"
              xmlns:fluent="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
              mc:Ignorable="d"
@@ -69,7 +69,7 @@
                                 <Border Width="16"
                                         Height="16"
                                         CornerRadius="3"
-                                        Background="{Binding Background}"
+                                        Background="{Binding Background, Converter={StaticResource HexToBrush}}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
                                         Margin="0,0,7,0"
@@ -77,28 +77,28 @@
                                 <!-- Accent dot -->
                                 <Ellipse Width="11"
                                          Height="11"
-                                         Fill="{Binding Accent}"
+                                         Fill="{Binding Accent, Converter={StaticResource HexToBrush}}"
                                          Margin="0,0,8,0"
                                          VerticalAlignment="Center" />
                                 <!-- Severity dots: low / mid / high / critical -->
                                 <Ellipse Width="9"
                                          Height="9"
-                                         Fill="{Binding SevLow}"
+                                         Fill="{Binding SevLow, Converter={StaticResource HexToBrush}}"
                                          Margin="0,0,3,0"
                                          VerticalAlignment="Center" />
                                 <Ellipse Width="9"
                                          Height="9"
-                                         Fill="{Binding SevMid}"
+                                         Fill="{Binding SevMid, Converter={StaticResource HexToBrush}}"
                                          Margin="0,0,3,0"
                                          VerticalAlignment="Center" />
                                 <Ellipse Width="9"
                                          Height="9"
-                                         Fill="{Binding SevHigh}"
+                                         Fill="{Binding SevHigh, Converter={StaticResource HexToBrush}}"
                                          Margin="0,0,3,0"
                                          VerticalAlignment="Center" />
                                 <Ellipse Width="9"
                                          Height="9"
-                                         Fill="{Binding SevCritical}"
+                                         Fill="{Binding SevCritical, Converter={StaticResource HexToBrush}}"
                                          Margin="0,0,10,0"
                                          VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding Label}"

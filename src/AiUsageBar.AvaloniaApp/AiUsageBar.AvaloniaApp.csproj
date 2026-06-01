@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- This head is Windows-only (Win32 tray + System.Drawing icon rendering). -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <!-- Native AOT publish. Surfaces trim/AOT analyzer warnings at build time and
+         runs the ILC linker on `dotnet publish -r win-x64`. -->
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyName>AiUsageBar</AssemblyName>
+    <AssemblyTitle>AI Usage Bar</AssemblyTitle>
+    <Product>AI Usage Bar</Product>
+    <Description>System-tray monitor for Anthropic Claude, OpenAI Codex, GitHub Copilot, Z.AI and OpenRouter plan usage.</Description>
+    <Authors>Evandro Fadul</Authors>
+    <Company>Evandro Fadul</Company>
+    <Copyright>Copyright © 2026 Evandro Fadul</Copyright>
+    <Version>1.0.0</Version>
+    <NeutralLanguage>en-US</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.17" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="FluentIcons.Avalonia" Version="1.2.315" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AiUsageBar.Core\AiUsageBar.Core.csproj" />
+    <ProjectReference Include="..\AiUsageBar.Presentation\AiUsageBar.Presentation.csproj" />
+  </ItemGroup>
+
+  <!-- Tomlyn is only used through its document model (Toml.ToModel → TomlTable, with
+       manual key reads); its reflection-based typed-model path is never called. Root
+       the assembly so the AOT trimmer keeps it intact (silences IL2104, guarantees
+       the TOML parser works at runtime). -->
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Tomlyn" />
+  </ItemGroup>
+
+</Project>

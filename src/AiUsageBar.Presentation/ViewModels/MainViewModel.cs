@@ -1,13 +1,14 @@
 using System.Collections.ObjectModel;
-using System.Windows.Threading;
 using AiUsageBar.Core;
 using AiUsageBar.Core.Config;
 using AiUsageBar.Core.Models;
 using AiUsageBar.Core.TokenTracking;
+using AiUsageBar.Presentation.Platform;
+using AiUsageBar.Presentation.Theming;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace AiUsageBar.App.ViewModels;
+namespace AiUsageBar.Presentation.ViewModels;
 
 /// <summary>
 /// Top-level view model — holds the vendor tabs, drives refresh, and exposes the
@@ -20,7 +21,8 @@ public sealed partial class MainViewModel : ObservableObject
     private const int PaceTolerance = 5;
 
     private readonly Func<AppConfig, UsageService> _serviceFactory;
-    private readonly DispatcherTimer _timer;
+    private readonly IThemeService _themeService;
+    private readonly IUiTimer _timer;
 
     /// <summary>Reads local Claude Code token usage for the active project (Anthropic tab).</summary>
     private readonly ClaudeTokenReader _claudeTokens = new();
@@ -50,16 +52,21 @@ public sealed partial class MainViewModel : ObservableObject
 
     public event EventHandler? TrayChanged;
 
-    public MainViewModel(AppConfig config, Func<AppConfig, UsageService> serviceFactory)
+    public MainViewModel(
+        AppConfig config,
+        Func<AppConfig, UsageService> serviceFactory,
+        IUiDispatcher dispatcher,
+        IThemeService themeService)
     {
         _config = config;
         _serviceFactory = serviceFactory;
+        _themeService = themeService;
         _service = serviceFactory(config);
 
         BuildTabs();
 
-        _timer = new DispatcherTimer { Interval = RefreshInterval };
-        _timer.Tick += async (_, _) => await RefreshAllAsync();
+        _timer = dispatcher.CreateTimer(RefreshInterval);
+        _timer.Tick += async () => await RefreshAllAsync();
     }
 
     /// <summary>Vendor currently shown on the tray.</summary>
@@ -166,7 +173,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
-        var vm = new SettingsViewModel(_config);
+        var vm = new SettingsViewModel(_config, _themeService);
         vm.Saved += async (_, _) =>
         {
             IsSettingsOpen = false;

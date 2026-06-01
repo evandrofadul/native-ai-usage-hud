@@ -1,6 +1,6 @@
 using AiUsageBar.Core.TokenTracking;
 
-namespace AiUsageBar.App.ViewModels;
+namespace AiUsageBar.Presentation.ViewModels;
 
 /// <summary>
 /// Dashboard card for a vendor tab (currently Claude Code / Anthropic): headline

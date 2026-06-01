@@ -8,8 +8,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using AiUsageBar.App.Converters;
-using AiUsageBar.App.ViewModels;
 using AiUsageBar.Core.Models;
+using AiUsageBar.Presentation.Theming;
+using AiUsageBar.Presentation.ViewModels;
 using FluentIcons.Common;
 using FluentIcons.Wpf;
 using H.NotifyIcon;
@@ -83,7 +84,7 @@ public sealed class TrayIconService : IDisposable
         Themes.ThemeManager.Changed += OnThemeChanged;
 
         // Follow the window-transparency preference (when it opts to affect the tray).
-        Themes.OpacityManager.Changed += OnOpacityChanged;
+        OpacityManager.Changed += OnOpacityChanged;
 
         Update();
     }
@@ -91,7 +92,7 @@ public sealed class TrayIconService : IDisposable
     /// <summary>Re-apply the tray opacity to the (possibly open) menu and tooltip card.</summary>
     private void OnOpacityChanged()
     {
-        var opacity = Themes.OpacityManager.TrayOpacity;
+        var opacity = OpacityManager.TrayOpacity;
         if (_icon.ContextMenu is { } menu) menu.Opacity = opacity;
         if (_toolTipPopup.Child is UIElement card) card.Opacity = opacity;
     }
@@ -104,7 +105,7 @@ public sealed class TrayIconService : IDisposable
 
     private ContextMenu BuildMenu()
     {
-        var menu = new ContextMenu { Opacity = Themes.OpacityManager.TrayOpacity };
+        var menu = new ContextMenu { Opacity = OpacityManager.TrayOpacity };
 
         // The tray ContextMenu is a free-floating element (anchored to the
         // TaskbarIcon, not to a window's visual tree). In that case the implicit
@@ -433,7 +434,7 @@ public sealed class TrayIconService : IDisposable
             Padding = new Thickness(13, 11, 13, 11),
             MinWidth = 212,
             SnapsToDevicePixels = true,
-            Opacity = Themes.OpacityManager.TrayOpacity,
+            Opacity = OpacityManager.TrayOpacity,
         };
         card.SetResourceReference(Border.BackgroundProperty, "Bg2Brush");
         card.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
@@ -536,7 +537,7 @@ public sealed class TrayIconService : IDisposable
     public void Dispose()
     {
         Themes.ThemeManager.Changed -= OnThemeChanged;
-        Themes.OpacityManager.Changed -= OnOpacityChanged;
+        OpacityManager.Changed -= OnOpacityChanged;
         _toolTipTimer.Stop();
         _toolTipPopup.IsOpen = false;
         _icon.Dispose();

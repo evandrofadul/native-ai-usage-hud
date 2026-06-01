@@ -4,7 +4,7 @@ using AiUsageBar.Core.Models;
 using AiUsageBar.Core.TokenTracking;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace AiUsageBar.App.ViewModels;
+namespace AiUsageBar.Presentation.ViewModels;
 
 /// <summary>One vendor tab — header + the section rows for its snapshot.</summary>
 public sealed partial class VendorTabViewModel : ObservableObject

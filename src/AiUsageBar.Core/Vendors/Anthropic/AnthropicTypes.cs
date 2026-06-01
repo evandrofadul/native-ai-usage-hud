@@ -18,7 +18,7 @@ public sealed class AnthropicUsageResponse
     [JsonPropertyName("extra_usage")] public ExtraUsageBlock? ExtraUsage { get; set; }
 
     public static AnthropicUsageResponse Parse(byte[] bytes) =>
-        JsonSerializer.Deserialize<AnthropicUsageResponse>(bytes, JsonDefaults.Options) ?? new();
+        JsonSerializer.Deserialize(bytes, AppJsonContext.Default.AnthropicUsageResponse) ?? new();
 
     public AnthropicSnapshot ToSnapshot(string planLabel)
     {

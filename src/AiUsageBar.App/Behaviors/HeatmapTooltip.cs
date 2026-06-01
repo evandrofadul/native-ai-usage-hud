@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using AiUsageBar.App.ViewModels;
+using AiUsageBar.Presentation.ViewModels;
 
 namespace AiUsageBar.App.Behaviors;
 

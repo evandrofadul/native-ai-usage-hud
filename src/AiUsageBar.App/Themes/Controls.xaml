@@ -1,7 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:vm="clr-namespace:AiUsageBar.App.ViewModels"
+                    xmlns:vm="clr-namespace:AiUsageBar.Presentation.ViewModels;assembly=AiUsageBar.Presentation"
                     xmlns:pacing="clr-namespace:AiUsageBar.Core.Pacing;assembly=AiUsageBar.Core"
                     xmlns:conv="clr-namespace:AiUsageBar.App.Converters"
                     xmlns:behaviors="clr-namespace:AiUsageBar.App.Behaviors">
@@ -14,6 +14,7 @@
     <conv:SeverityToBrushConverter x:Key="SeverityToBrush"/>
     <conv:EnumEqualsConverter x:Key="EnumEquals"/>
     <conv:EnumLabelConverter x:Key="EnumLabel"/>
+    <conv:HexToBrushConverter x:Key="HexToBrush"/>
 
     <!-- ============================================================
          Buttons — flat, rounded, accent hover

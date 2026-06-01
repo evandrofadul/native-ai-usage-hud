@@ -33,18 +33,24 @@ public static class AnthropicOAuth
         public long ExpiresIn { get; set; }
     }
 
+    /// <summary>Request body for the token refresh. A concrete type (not an anonymous
+    /// object) so it can be serialized through the source-gen context under Native AOT.</summary>
+    public sealed class RefreshRequest
+    {
+        [JsonPropertyName("grant_type")] public string GrantType { get; set; } = "refresh_token";
+        [JsonPropertyName("client_id")] public string ClientId { get; set; } = "";
+        [JsonPropertyName("refresh_token")] public string RefreshToken { get; set; } = "";
+    }
+
     public static async Task<RefreshResponse> RefreshAsync(
         HttpClient client, string endpoint, string refreshToken, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Post, endpoint);
         req.Headers.TryAddWithoutValidation("anthropic-beta", BetaHeader);
         req.Headers.TryAddWithoutValidation("User-Agent", UserAgent);
-        req.Content = JsonContent.Create(new
-        {
-            grant_type = "refresh_token",
-            client_id = ClientId,
-            refresh_token = refreshToken,
-        });
+        req.Content = JsonContent.Create(
+            new RefreshRequest { ClientId = ClientId, RefreshToken = refreshToken },
+            AppJsonContext.Default.AnthropicRefreshRequest);
 
         HttpResponseMessage resp;
         try { resp = await client.SendAsync(req, ct); }
@@ -58,7 +64,7 @@ public static class AnthropicOAuth
             throw new HttpStatusException((int)resp.StatusCode, msg);
         }
 
-        try { return JsonSerializer.Deserialize<RefreshResponse>(body, JsonDefaults.Options)!; }
+        try { return JsonSerializer.Deserialize(body, AppJsonContext.Default.AnthropicRefreshResponse)!; }
         catch (JsonException e) { throw new SchemaException($"token refresh response: {e.Message}"); }
     }
 

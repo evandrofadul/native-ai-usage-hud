@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AiUsageBar.Core\AiUsageBar.Core.csproj" />
+    <ProjectReference Include="..\AiUsageBar.Presentation\AiUsageBar.Presentation.csproj" />
   </ItemGroup>
 
   <ItemGroup>

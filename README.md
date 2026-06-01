@@ -21,11 +21,15 @@ A single window reachable from a **system-tray icon**:
 
 ## Layout
 
+Two UI heads (WPF and Avalonia) share the same core and view models:
+
 ```
 src/
-  AiUsageBar.Core/        # platform-neutral core (no WPF) — all logic + networking
-  AiUsageBar.App/         # WPF UI + tray
-  AiUsageBar.Core.Tests/  # xUnit suite (ported from the Rust tests)
+  AiUsageBar.Core/         # platform-neutral core (no UI framework) — all logic + networking
+  AiUsageBar.Presentation/ # shared view models + abstractions (IUiDispatcher, IThemeService)
+  AiUsageBar.App/          # WPF head — UI + tray
+  AiUsageBar.AvaloniaApp/  # Avalonia head — UI + tray
+  AiUsageBar.Core.Tests/   # xUnit suite (ported from the Rust tests)
 ```
 
 `AiUsageBar.Core` mirrors the Rust crate module-for-module: `Models`, `Pacing`
@@ -33,7 +37,34 @@ src/
 `ConfigWriter`), `Caching` (atomic write + TTL + lock + last-error), and one
 folder per vendor (`Vendors/Anthropic`, `OpenAi`, `Copilot`, `Zai`,
 `OpenRouter`) with `Types` / `Creds` / `OAuth` / `Fetcher`. `UsageService` is
-the orchestrator.
+the orchestrator. `Core/Theming/PaletteColors.cs` is the single source of truth
+for the 42 theme palettes.
+
+`AiUsageBar.Presentation` holds every view model (`MainViewModel`,
+`VendorTabViewModel`, `SettingsViewModel`, the section/dashboard VMs,
+`ThemeOption`) plus `OpacityManager` and the framework-agnostic abstractions each
+head implements: `IUiDispatcher` (timer) and `IThemeService` (palette swap). Both
+heads are thin — only XAML + framework interop (window chrome, animations, tray,
+icon rendering).
+
+### Two heads, same look
+
+The Avalonia head reproduces the WPF UI exactly: the same borderless window,
+tabs, gauges, dashboard/heatmap, settings overlay and palettes. It deliberately
+does **not** use a prebuilt Avalonia theme — `Themes/Controls.axaml` re-templates
+every visible control by hand to match WPF. `Avalonia.Themes.Simple` is included
+only as structural plumbing for controls that aren't drawn directly
+(`ScrollViewer`/`ItemsControl`), and is fully overridden.
+
+### Theme palettes (single source of truth)
+
+The 42 palettes live in `tools/palettes.json`. Run the generator to (re)emit the
+C# table and the per-framework dictionaries — never hand-edit the generated files:
+
+```powershell
+pwsh tools/Generate-Palettes.ps1            # PaletteColors.cs + Avalonia *.axaml
+pwsh tools/Generate-Palettes.ps1 -IncludeWpf  # also regenerate the WPF *.xaml
+```
 
 ## Windows paths
 
@@ -82,11 +113,13 @@ inline keys, preserving the file's comments and unrelated fields.
 
 ```powershell
 dotnet build
-dotnet test                       # 108 tests
-dotnet run --project src/AiUsageBar.App
+dotnet test                              # 108 tests
+dotnet run --project src/AiUsageBar.App          # WPF head
+dotnet run --project src/AiUsageBar.AvaloniaApp  # Avalonia head
 ```
 
-Requires the .NET 10 SDK with the Windows Desktop workload (WPF).
+Requires the .NET 10 SDK (the WPF head also needs the Windows Desktop workload).
+Both heads build the tray glyph at runtime and start hidden to the tray.
 
 ## Differences from the Linux original
 

@@ -1,10 +1,13 @@
 using System.Net.Http;
 using System.Threading;
 using System.Windows;
+using AiUsageBar.App.Platform;
+using AiUsageBar.App.Themes;
 using AiUsageBar.App.Tray;
-using AiUsageBar.App.ViewModels;
 using AiUsageBar.Core;
 using AiUsageBar.Core.Config;
+using AiUsageBar.Presentation.Theming;
+using AiUsageBar.Presentation.ViewModels;
 
 namespace AiUsageBar.App;
 
@@ -50,12 +53,12 @@ public partial class App : Application
         var config = LoadConfigSafe();
 
         // Apply the saved color theme + window transparency before any window is shown.
-        Themes.ThemeManager.Apply(config.Ui.Theme ?? Core.Models.ThemeId.OneDark);
-        Themes.OpacityManager.Apply(
-            config.Ui.Opacity ?? Themes.OpacityManager.DefaultPercent,
+        ThemeManager.Apply(config.Ui.Theme ?? Core.Models.ThemeId.OneDark);
+        OpacityManager.Apply(
+            config.Ui.Opacity ?? OpacityManager.DefaultPercent,
             config.Ui.OpacityAffectsTray ?? false);
 
-        _vm = new MainViewModel(config, cfg => new UsageService(_http, cfg));
+        _vm = new MainViewModel(config, cfg => new UsageService(_http, cfg), new WpfDispatcher(), new WpfThemeService());
         _window = new MainWindow(_vm);
         _tray = new TrayIconService(_vm, ShowWindow, Quit);
 

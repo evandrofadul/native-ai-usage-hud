@@ -19,7 +19,7 @@ public sealed class CopilotUserResponse
     [JsonPropertyName("quota_snapshots")] public Dictionary<string, CopilotQuotaSnapshot>? QuotaSnapshots { get; set; }
 
     public static CopilotUserResponse Parse(byte[] bytes) =>
-        JsonSerializer.Deserialize<CopilotUserResponse>(bytes, JsonDefaults.Options) ?? new();
+        JsonSerializer.Deserialize(bytes, AppJsonContext.Default.CopilotUserResponse) ?? new();
 
     public CopilotSnapshot ToSnapshot()
     {
@@ -103,11 +103,11 @@ public sealed class CopilotCacheDto
             ChatEnabled = s.ChatEnabled,
             ResetsAt = s.ResetsAt,
             Quotas = s.Quotas.ToList(),
-        });
+        }, AppJsonContext.Default.CopilotCacheDto);
 
     public static CopilotSnapshot Deserialize(byte[] bytes)
     {
-        var d = JsonSerializer.Deserialize<CopilotCacheDto>(bytes, JsonDefaults.Options) ?? new();
+        var d = JsonSerializer.Deserialize(bytes, AppJsonContext.Default.CopilotCacheDto) ?? new();
         return new CopilotSnapshot(d.Plan, d.ChatEnabled, d.ResetsAt, d.Quotas);
     }
 }

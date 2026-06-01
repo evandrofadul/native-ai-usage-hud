@@ -3,7 +3,7 @@ using AiUsageBar.Core.Models;
 using AiUsageBar.Core.Pacing;
 using AiUsageBar.Core.TokenTracking;
 
-namespace AiUsageBar.App.ViewModels;
+namespace AiUsageBar.Presentation.ViewModels;
 
 /// <summary>Base for a panel row. Port of the Rust <c>panels.rs Section</c> enum.</summary>
 public abstract class SectionVm;

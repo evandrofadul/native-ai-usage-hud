@@ -50,7 +50,7 @@ public static class AnthropicCreds
 
         try
         {
-            var doc = JsonSerializer.Deserialize<CredentialsFile>(raw, JsonDefaults.Options);
+            var doc = JsonSerializer.Deserialize(raw, AppJsonContext.Default.CredentialsFile);
             if (doc?.ClaudeAiOauth is null)
                 throw new CredentialsException($"{path} missing claudeAiOauth. Run `claude` to re-authenticate.");
             return doc.ClaudeAiOauth;
@@ -74,13 +74,13 @@ public static class AnthropicCreds
         }
         catch { root = new JsonObject(); }
 
-        root["claudeAiOauth"] = JsonSerializer.SerializeToNode(creds, JsonDefaults.Options);
+        root["claudeAiOauth"] = JsonSerializer.SerializeToNode(creds, AppJsonContext.Default.OauthCreds);
         var bytes = System.Text.Encoding.UTF8.GetBytes(
             root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         Cache.AtomicWrite(path, bytes);
     }
 
-    private sealed class CredentialsFile
+    internal sealed class CredentialsFile
     {
         [JsonPropertyName("claudeAiOauth")] public OauthCreds? ClaudeAiOauth { get; set; }
     }

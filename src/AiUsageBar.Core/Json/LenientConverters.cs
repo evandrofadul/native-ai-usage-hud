@@ -54,14 +54,3 @@ public sealed class MoneyStringConverter : JsonConverter<string>
 
     public override void Write(Utf8JsonWriter w, string v, JsonSerializerOptions o) => w.WriteStringValue(v);
 }
-
-public static class JsonDefaults
-{
-    /// <summary>Shared options: case-insensitive, tolerant of unknown members.</summary>
-    public static readonly JsonSerializerOptions Options = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        NumberHandling = JsonNumberHandling.AllowReadingFromString,
-        ReadCommentHandling = JsonCommentHandling.Skip,
-    };
-}

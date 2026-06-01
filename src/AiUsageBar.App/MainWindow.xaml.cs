@@ -4,8 +4,8 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Animation;
-using AiUsageBar.App.Themes;
-using AiUsageBar.App.ViewModels;
+using AiUsageBar.Presentation.Theming;
+using AiUsageBar.Presentation.ViewModels;
 
 namespace AiUsageBar.App;
 

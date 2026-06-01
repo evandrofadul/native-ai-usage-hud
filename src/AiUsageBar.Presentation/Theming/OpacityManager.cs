@@ -1,10 +1,11 @@
-namespace AiUsageBar.App.Themes;
+namespace AiUsageBar.Presentation.Theming;
 
 /// <summary>
 /// Holds the user's window-transparency preference at runtime and broadcasts changes,
-/// mirroring <see cref="ThemeManager"/>. The main window uses <see cref="WindowOpacity"/>
-/// as its resting opacity (the show/hide fade animates to it), and the tray service
-/// dims its custom popup/menu to match when <see cref="AffectsTray"/> is on.
+/// mirroring <see cref="IThemeService"/>. Framework-agnostic (shared by every UI head):
+/// the main window uses <see cref="WindowOpacity"/> as its resting opacity (the
+/// show/hide fade animates to it), and the tray dims its custom popup/menu to match
+/// when <see cref="AffectsTray"/> is on.
 /// </summary>
 public static class OpacityManager
 {

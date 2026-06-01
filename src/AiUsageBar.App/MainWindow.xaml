@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:AiUsageBar.App.ViewModels"
+        xmlns:vm="clr-namespace:AiUsageBar.Presentation.ViewModels;assembly=AiUsageBar.Presentation"
         xmlns:controls="clr-namespace:AiUsageBar.App.Controls"
         xmlns:fluent="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
         mc:Ignorable="d"

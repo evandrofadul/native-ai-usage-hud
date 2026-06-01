@@ -1,0 +1,310 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AiUsageBar.Presentation.ViewModels;assembly=AiUsageBar.Presentation"
+        xmlns:controls="clr-namespace:AiUsageBar.AvaloniaApp.Controls"
+        xmlns:behaviors="clr-namespace:AiUsageBar.AvaloniaApp.Behaviors"
+        xmlns:icons="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:sys="using:System"
+        x:Class="AiUsageBar.AvaloniaApp.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="AI Usage Bar"
+        MinWidth="350" MaxWidth="760" Width="445"
+        MinHeight="100"
+        CanResize="True"
+        SizeToContent="Height"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Foreground="{DynamicResource FgBrush}"
+        FontFamily="Segoe UI"
+        UseLayoutRounding="True"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="F5" Command="{Binding RefreshActiveCommand}"/>
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding RefreshAllCommand}"/>
+    </Window.KeyBindings>
+
+    <!-- Section row templates (port of panels.rs render_section). Placed on the window
+         so the tab content ItemsControl resolves them implicitly by data type. -->
+    <Window.DataTemplates>
+
+        <DataTemplate DataType="vm:TitleSectionVm" x:DataType="vm:TitleSectionVm">
+            <Grid Margin="0,2,0,8">
+                <TextBlock Text="{Binding Left}" FontWeight="Bold" FontSize="15"
+                           Foreground="{DynamicResource AccentBrush}"/>
+                <TextBlock Text="{Binding Right}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                           Foreground="{DynamicResource DimBrush}" FontSize="11"/>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:MetricSectionVm" x:DataType="vm:MetricSectionVm">
+            <StackPanel Margin="0,5,0,5">
+                <Grid Margin="0,0,0,4">
+                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{DynamicResource FgBrush}"/>
+                    <TextBlock Text="{Binding ValueLabel}" HorizontalAlignment="Right" FontWeight="Bold"
+                               Classes="sevValue"
+                               Classes.sevMid="{Binding Severity, Converter={StaticResource Eq}, ConverterParameter=Mid}"
+                               Classes.sevHigh="{Binding Severity, Converter={StaticResource Eq}, ConverterParameter=High}"
+                               Classes.sevCritical="{Binding Severity, Converter={StaticResource Eq}, ConverterParameter=Critical}"/>
+                </Grid>
+                <ProgressBar Theme="{StaticResource UsageGauge}" Value="{Binding Pct}"
+                             Classes.sevMid="{Binding Severity, Converter={StaticResource Eq}, ConverterParameter=Mid}"
+                             Classes.sevHigh="{Binding Severity, Converter={StaticResource Eq}, ConverterParameter=High}"
+                             Classes.sevCritical="{Binding Severity, Converter={StaticResource Eq}, ConverterParameter=Critical}"/>
+                <TextBlock Text="{Binding Footnote}" FontSize="11" Margin="0,4,0,0"
+                           Foreground="{DynamicResource DimBrush}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:BlockSectionVm" x:DataType="vm:BlockSectionVm">
+            <StackPanel Margin="0,5,0,5">
+                <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource FgBrush}"/>
+                <ItemsControl ItemsSource="{Binding Body}" Margin="0,2,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="sys:String">
+                            <TextBlock Text="{Binding}" Foreground="{DynamicResource DimBrush}" FontSize="12"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:TextSectionVm" x:DataType="vm:TextSectionVm">
+            <StackPanel Orientation="Horizontal" Margin="0,3,0,3">
+                <TextBlock Text="{Binding Label}" FontWeight="Bold" Margin="0,0,8,0"
+                           Foreground="{DynamicResource FgBrush}"/>
+                <TextBlock Text="{Binding Value}" Foreground="{DynamicResource DimBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:TokenSectionVm" x:DataType="vm:TokenSectionVm">
+            <StackPanel Margin="0,10,0,2">
+                <Grid Margin="0,0,0,6">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{DynamicResource FgBrush}"/>
+                    <TextBlock Text="{Binding Project}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                               FontSize="11" Foreground="{DynamicResource DimBrush}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="170"/>
+                </Grid>
+                <Grid>
+                    <TextBlock Text="Session" FontSize="12" Foreground="{DynamicResource FgBrush}"/>
+                    <TextBlock Text="{Binding SessionTotal}" HorizontalAlignment="Right" FontWeight="Bold"
+                               Foreground="{DynamicResource AccentBrush}"/>
+                </Grid>
+                <TextBlock Text="{Binding SessionBreakdown}" FontSize="11" Margin="0,2,0,0"
+                           Foreground="{DynamicResource DimBrush}"/>
+                <Grid Margin="0,6,0,0">
+                    <TextBlock Text="Project total" FontSize="12" Foreground="{DynamicResource FgBrush}"/>
+                    <TextBlock Text="{Binding ProjectTotal}" HorizontalAlignment="Right" FontWeight="SemiBold"
+                               Foreground="{DynamicResource FgBrush}"/>
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Models}" Margin="0,4,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="sys:String">
+                            <TextBlock Text="{Binding}" FontSize="11" Foreground="{DynamicResource DimBrush}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:DashboardSectionVm" x:DataType="vm:DashboardSectionVm">
+            <Border Background="{DynamicResource Bg2Brush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="9" Margin="0,12,0,0">
+                <StackPanel>
+                    <!-- Stat cards: 4 columns x 2 rows -->
+                    <UniformGrid Columns="4">
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Sessions" Classes="statLabel"/>
+                                <TextBlock Text="{Binding Sessions}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Messages" Classes="statLabel"/>
+                                <TextBlock Text="{Binding Messages}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Total tokens" Classes="statLabel"/>
+                                <TextBlock Text="{Binding TotalTokens}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Active days" Classes="statLabel"/>
+                                <TextBlock Text="{Binding ActiveDays}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Current streak" Classes="statLabel"/>
+                                <TextBlock Text="{Binding CurrentStreak}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Longest streak" Classes="statLabel"/>
+                                <TextBlock Text="{Binding LongestStreak}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Peak hour" Classes="statLabel"/>
+                                <TextBlock Text="{Binding PeakHour}" Classes="statValue"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="statCard">
+                            <StackPanel>
+                                <TextBlock Text="Favorite model" Classes="statLabel"/>
+                                <TextBlock Text="{Binding FavoriteModel}" Classes="statValue" FontSize="13"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Activity heatmap: 7 rows, filled left to right. A single shared
+                         card (HeatTip) follows the cursor as the tooltip, driven by the
+                         HeatmapTooltip behavior. -->
+                    <Grid HorizontalAlignment="Center" Margin="2">
+                        <ItemsControl Name="HeatGrid" ItemsSource="{Binding Heatmap}"
+                                      Background="Transparent"
+                                      behaviors:HeatmapTooltip.IsEnabled="True"
+                                      behaviors:HeatmapTooltip.Card="{Binding #HeatTip}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Vertical" MaxHeight="120"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:HeatCell">
+                                    <Border Classes="heat"
+                                            Classes.lvl1="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=1}"
+                                            Classes.lvl2="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=2}"
+                                            Classes.lvl3="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=3}"
+                                            Classes.lvl4="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=4}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Canvas IsHitTestVisible="False">
+                            <Border Name="HeatTip" Classes="heatTip" Opacity="0" IsHitTestVisible="False">
+                                <TextBlock FontSize="11" Foreground="{DynamicResource FgBrush}"/>
+                            </Border>
+                        </Canvas>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+    </Window.DataTemplates>
+
+    <Panel>
+        <!-- Whole window surface; interactive controls handle their own clicks first. -->
+        <Border Name="RootBorder" Background="{DynamicResource BgBrush}" CornerRadius="6">
+            <Grid Margin="12" RowDefinitions="Auto,*,Auto">
+
+                <!-- Header: title (left) + window controls (right) -->
+                <Grid Grid.Row="0" Margin="-12,-12,-12,0" Background="Transparent"
+                      Name="HeaderBar" PointerPressed="OnHeaderPressed">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12">
+                        <Border Width="28" Height="26" CornerRadius="4"
+                                Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
+                            <TextBlock Text="ai" FontSize="15" FontWeight="Bold"
+                                       Foreground="{DynamicResource BgBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="AI Usage" FontSize="16" FontWeight="SemiBold" Margin="8,0,0,0"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource FgBrush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                        <Button Command="{Binding OpenSettingsCommand}"
+                                Theme="{StaticResource WindowControlButton}" Width="45" Height="32"
+                                ToolTip.Tip="Settings">
+                            <icons:SymbolIcon Symbol="Settings" IconVariant="Regular" FontSize="14"
+                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                        </Button>
+                        <ToggleButton Name="PinButton" Theme="{StaticResource WindowToggleButton}"
+                                      IsCheckedChanged="OnPinChanged" Width="45" Height="32"
+                                      ToolTip.Tip="Keep on top (can't be minimized while pinned)">
+                            <icons:SymbolIcon Symbol="Pin" IconVariant="Regular" FontSize="14"
+                                              Foreground="{Binding $parent[ToggleButton].Foreground}"/>
+                        </ToggleButton>
+                        <Button Name="MinimizeButton" Theme="{StaticResource WindowControlButton}"
+                                Click="OnMinimizeClick" Width="45" Height="32" ToolTip.Tip="Minimize">
+                            <icons:SymbolIcon Symbol="Subtract" IconVariant="Regular" FontSize="15"
+                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                        </Button>
+                        <Button Theme="{StaticResource WindowCloseButton}" Click="OnCloseClick"
+                                Width="45" Height="32" ToolTip.Tip="Close to tray">
+                            <icons:SymbolIcon Symbol="Dismiss" IconVariant="Regular" FontSize="14"
+                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Vendor tabs -->
+                <TabControl Grid.Row="1" ItemsSource="{Binding Tabs}"
+                            SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:VendorTabViewModel">
+                            <TextBlock Text="{Binding Header}"/>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate x:DataType="vm:VendorTabViewModel">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0">
+                                <ItemsControl ItemsSource="{Binding Sections}" Margin="15,10,15,15"/>
+                            </ScrollViewer>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <!-- Footer: status (left) + refresh (right) -->
+                <Grid Grid.Row="2" Margin="0,10,0,0">
+                    <TextBlock Text="{Binding Status}" Foreground="{DynamicResource DimBrush}"
+                               FontSize="11" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    <Button Command="{Binding RefreshActiveCommand}" Margin="0,0,6,0"
+                            HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <icons:SymbolIcon Symbol="ArrowSync" IconVariant="Regular" FontSize="14"
+                                              VerticalAlignment="Center"
+                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                            <TextBlock Text="Refresh" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Resize grips: 6px strips outside the 12px content inset. -->
+        <Rectangle Width="6" HorizontalAlignment="Left" Margin="0,6,0,6" Fill="Transparent"
+                   Cursor="SizeWestEast" PointerPressed="OnResizeLeft"/>
+        <Rectangle Width="6" HorizontalAlignment="Right" Margin="0,6,0,6" Fill="Transparent"
+                   Cursor="SizeWestEast" PointerPressed="OnResizeRight"/>
+        <Rectangle Height="6" VerticalAlignment="Top" Margin="6,0,184,0" Fill="Transparent"
+                   Cursor="SizeNorthSouth" PointerPressed="OnResizeTop"/>
+        <Rectangle Width="6" Height="6" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="Transparent"
+                   Cursor="TopLeftCorner" PointerPressed="OnResizeTopLeft"/>
+        <Rectangle Height="6" VerticalAlignment="Bottom" Margin="6,0,6,0" Fill="Transparent"
+                   Cursor="SizeNorthSouth" PointerPressed="OnResizeBottom"/>
+        <Rectangle Width="6" Height="6" HorizontalAlignment="Left" VerticalAlignment="Bottom" Fill="Transparent"
+                   Cursor="BottomLeftCorner" PointerPressed="OnResizeBottomLeft"/>
+        <Rectangle Width="6" Height="6" HorizontalAlignment="Right" VerticalAlignment="Bottom" Fill="Transparent"
+                   Cursor="BottomRightCorner" PointerPressed="OnResizeBottomRight"/>
+
+        <!-- Settings overlay: dimmed backdrop + centered card. -->
+        <Border Name="SettingsBackdrop" Background="#99000000" CornerRadius="6"
+                IsVisible="{Binding IsSettingsOpen}" PointerPressed="OnBackdropPressed">
+            <Border Background="{DynamicResource Bg2Brush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Margin="16"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <controls:SettingsView DataContext="{Binding SettingsVm}"/>
+            </Border>
+        </Border>
+    </Panel>
+</Window>

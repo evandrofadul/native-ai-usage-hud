@@ -1,0 +1,19 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Vesper. Generated from tools/palettes.json — do not edit by hand. -->
+    <SolidColorBrush x:Key="BgBrush"            Color="#101010"/>
+    <SolidColorBrush x:Key="Bg2Brush"           Color="#080808"/>
+    <SolidColorBrush x:Key="Bg3Brush"           Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="HoverBrush"         Color="#282828"/>
+    <SolidColorBrush x:Key="FgBrush"            Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="DimBrush"           Color="#8B8B8B"/>
+    <SolidColorBrush x:Key="AccentBrush"        Color="#FFC799"/>
+    <SolidColorBrush x:Key="BorderBrush"        Color="#383838"/>
+    <SolidColorBrush x:Key="BarEmptyBrush"      Color="#383838"/>
+    <SolidColorBrush x:Key="SevLowBrush"        Color="#99FFE4"/>
+    <SolidColorBrush x:Key="SevMidBrush"        Color="#FFC799"/>
+    <SolidColorBrush x:Key="SevHighBrush"       Color="#FFA48C"/>
+    <SolidColorBrush x:Key="SevCriticalBrush"   Color="#FF8080"/>
+    <SolidColorBrush x:Key="CloseHoverBrush"    Color="#FF8080"/>
+    <SolidColorBrush x:Key="ClosePressedBrush"  Color="#D75858"/>
+</ResourceDictionary>

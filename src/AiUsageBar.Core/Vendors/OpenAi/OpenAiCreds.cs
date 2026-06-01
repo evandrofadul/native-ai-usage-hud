@@ -86,7 +86,7 @@ public static class OpenAiCreds
 
         try
         {
-            var auth = JsonSerializer.Deserialize<AuthFile>(raw, JsonDefaults.Options);
+            var auth = JsonSerializer.Deserialize(raw, AppJsonContext.Default.AuthFile);
             if (auth?.Tokens is null || string.IsNullOrEmpty(auth.Tokens.AccessToken))
                 throw new CredentialsException($"{path} missing tokens. Run `codex login` to re-authenticate.");
             return auth;
@@ -104,7 +104,7 @@ public static class OpenAiCreds
         try { root = JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? new JsonObject(); }
         catch { root = new JsonObject(); }
 
-        root["tokens"] = JsonSerializer.SerializeToNode(auth.Tokens, JsonDefaults.Options);
+        root["tokens"] = JsonSerializer.SerializeToNode(auth.Tokens, AppJsonContext.Default.Tokens);
         var bytes = System.Text.Encoding.UTF8.GetBytes(
             root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         Cache.AtomicWrite(path, bytes);
