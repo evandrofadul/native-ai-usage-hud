@@ -20,7 +20,7 @@ public static class ConfigWriter
     /// clobbering with a blank).
     /// </summary>
     public static void Save(string path, VendorId primary, ThemeId theme, string? zaiKey, string? openRouterKey,
-        int? opacity = null, bool? opacityAffectsTray = null)
+        int? opacity = null, bool? opacityAffectsTray = null, bool? launchAtStartup = null)
     {
         var text = File.Exists(path) ? File.ReadAllText(path) : "";
         var lines = text.Length == 0
@@ -32,6 +32,7 @@ public static class ConfigWriter
         // Opacity + its tray flag are TOML scalars (number / bool), so write them unquoted.
         if (opacity is { } op) SetKey(lines, "ui", "opacity", op.ToString(), quote: false);
         if (opacityAffectsTray is { } tray) SetKey(lines, "ui", "opacity_affects_tray", tray ? "true" : "false", quote: false);
+        if (launchAtStartup is { } launch) SetKey(lines, "ui", "launch_at_startup", launch ? "true" : "false", quote: false);
         if (!string.IsNullOrEmpty(zaiKey)) SetKey(lines, "zai", "api_key", zaiKey);
         if (!string.IsNullOrEmpty(openRouterKey)) SetKey(lines, "openrouter", "api_key", openRouterKey);
 

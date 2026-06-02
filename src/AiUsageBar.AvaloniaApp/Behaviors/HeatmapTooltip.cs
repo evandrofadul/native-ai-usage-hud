@@ -1,6 +1,7 @@
 using AiUsageBar.Presentation.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 
@@ -58,7 +59,7 @@ public static class HeatmapTooltip
     private static void OnPointerMoved(object? sender, PointerEventArgs e)
     {
         var owner = (Control)sender!;
-        if (GetCard(owner) is not { Parent: Visual canvas } card) return;
+        if (GetCard(owner) is not { } card) return;
 
         // Refresh the text only when over an actual day cell; in the gaps between cells
         // keep the last text so it doesn't flicker as the pointer crosses.
@@ -66,7 +67,20 @@ public static class HeatmapTooltip
 
         if (card.Child is TextBlock text) text.Text = cell.Tooltip;
 
-        var pos = e.GetPosition(canvas);
+        // Host the card in the window's overlay layer so it floats above all content. Its
+        // original parent is a Canvas nested inside the tab's ScrollViewer, which clips it;
+        // the overlay layer sits on top of everything in the window and isn't clipped. Move
+        // it once, on first use (the owner is attached to the tree by the time we get here).
+        var overlay = OverlayLayer.GetOverlayLayer(owner);
+        if (overlay is null) return;
+        if (!ReferenceEquals(card.Parent, overlay))
+        {
+            (card.Parent as Panel)?.Children.Remove(card);
+            overlay.Children.Add(card);
+        }
+
+        // Position centered above the cursor, in the overlay layer's coordinate space.
+        var pos = owner.TranslatePoint(e.GetPosition(owner), overlay) ?? default;
         Canvas.SetLeft(card, pos.X - card.Bounds.Width / 2);
         Canvas.SetTop(card, pos.Y - Gap - card.Bounds.Height);
         card.Opacity = 1;

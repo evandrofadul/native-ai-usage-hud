@@ -37,6 +37,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Whether the transparency also dims the tray's custom popup/menu.</summary>
     [ObservableProperty] private bool _opacityAffectsTray;
 
+    /// <summary>Whether the app should launch automatically when the user logs in.</summary>
+    [ObservableProperty] private bool _launchAtStartup;
+
     [ObservableProperty] private string _status = "";
 
     /// <summary>Raised when a save succeeds; the host reloads config + re-fetches.</summary>
@@ -56,6 +59,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _opacityAffectsTray = OpacityManager.AffectsTray;
         _originalOpacity = OpacityManager.Percent;
         _originalOpacityAffectsTray = OpacityManager.AffectsTray;
+
+        _launchAtStartup = config.Ui.LaunchAtStartup ?? false;
     }
 
     /// <summary>Live-preview the theme as soon as the user picks a new one.</summary>
@@ -72,7 +77,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            ConfigWriter.Save(AppPaths.ConfigFile, Primary, Theme, null, null, Opacity, OpacityAffectsTray);
+            ConfigWriter.Save(AppPaths.ConfigFile, Primary, Theme, null, null, Opacity, OpacityAffectsTray, LaunchAtStartup);
+            // Register/unregister the OS auto-start entry to match the saved preference.
+            AutoStartManager.Apply(LaunchAtStartup);
             Status = $"Saved to {AppPaths.ConfigFile}";
             Saved?.Invoke(this, EventArgs.Empty);
         }

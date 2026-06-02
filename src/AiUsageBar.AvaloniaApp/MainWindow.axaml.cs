@@ -21,6 +21,14 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // Keep-on-top relies on the EWMH _NET_WM_STATE_ABOVE hint (what Avalonia's X11
+        // Topmost maps to). Wayland has no portable always-on-top, and compositors like
+        // COSMIC don't advertise _NET_WM_STATE_ABOVE under XWayland, so the hint is silently
+        // dropped and the pin does nothing. Hide the button on Linux rather than offer a
+        // control that can't work; Windows/GNOME/KDE keep it.
+        if (OperatingSystem.IsLinux())
+            PinButton.IsVisible = false;
+
         Opacity = OpacityManager.WindowOpacity;
         OpacityManager.Changed += OnOpacityChanged;
     }

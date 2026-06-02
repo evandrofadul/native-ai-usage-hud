@@ -54,6 +54,7 @@ public sealed class AppConfig
             cfg.Ui.Theme = ThemeIdExtensions.FromSlug(GetString(uiT, "theme"));
             cfg.Ui.Opacity = GetInt(uiT, "opacity");
             cfg.Ui.OpacityAffectsTray = GetBoolOrNull(uiT, "opacity_affects_tray");
+            cfg.Ui.LaunchAtStartup = GetBoolOrNull(uiT, "launch_at_startup");
         }
 
         if (Section(model, "anthropic") is { } aT)
@@ -124,6 +125,9 @@ public sealed class UiConfig
 
     /// <summary>Whether the opacity also dims the tray's custom popup/menu. Null falls back to false.</summary>
     public bool? OpacityAffectsTray { get; set; }
+
+    /// <summary>Whether the app registers itself to launch on login. Null falls back to false.</summary>
+    public bool? LaunchAtStartup { get; set; }
 }
 
 public sealed class AnthropicConfig

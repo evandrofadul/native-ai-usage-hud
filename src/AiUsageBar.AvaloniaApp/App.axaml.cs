@@ -70,6 +70,10 @@ public partial class App : Application
                 config.Ui.Opacity ?? OpacityManager.DefaultPercent,
                 config.Ui.OpacityAffectsTray ?? false);
 
+            // Keep the OS auto-start entry in sync with the saved preference (also refreshes
+            // the recorded exe path after an update/move). No-op when disabled/absent.
+            AutoStartManager.Apply(config.Ui.LaunchAtStartup ?? false);
+
             _vm = new MainViewModel(config, cfg => new UsageService(_http, cfg), new AvaloniaDispatcher(), _theme);
             _window = new MainWindow { DataContext = _vm };
 
