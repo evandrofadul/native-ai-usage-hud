@@ -10,6 +10,9 @@
          builds so a linux-x64 publish doesn't carry it. -->
     <ApplicationManifest Condition="'$(RuntimeIdentifier)' == '' or $(RuntimeIdentifier.StartsWith('win'))">app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Embeds the Win32 icon resource into the app .exe (Explorer / taskbar / pinned).
+         Ignored by non-Windows apphosts, so it is safe for the linux-x64 publish too. -->
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     <!-- Cross-platform head. The Win32 tray + System.Drawing icon path is gated to Windows
          at runtime (WindowsTrayController / OperatingSystem.IsWindows()); CA1416 is silenced
          because those platform-specific calls are reached only on Windows. -->
@@ -17,6 +20,19 @@
     <!-- Native AOT publish. Surfaces trim/AOT analyzer warnings at build time and
          runs the ILC linker on `dotnet publish -r win-x64`. -->
     <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <!-- Size/perf switches applied only to RID-targeted publishes (e.g. `-r win-x64`), so a
+       bare `dotnet publish -c Release -r win-x64` yields the optimized AOT binary with no
+       extra -p: flags. Guarded by RuntimeIdentifier so plain `dotnet run` / Debug keep
+       stack traces, debugger support and the host culture. InvariantGlobalization drops
+       ICU (formatting uses the invariant culture in the published app). -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <TrimMode>full</TrimMode>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <StackTraceSupport>false</StackTraceSupport>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -37,6 +53,12 @@
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.17" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.17" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+  </ItemGroup>
+
+  <!-- App assets embedded as Avalonia resources (avares://AiUsageHud/Assets/...).
+       The window icon (MainWindow Icon="/Assets/icon.ico") uses this on both heads. -->
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
 
   <ItemGroup>

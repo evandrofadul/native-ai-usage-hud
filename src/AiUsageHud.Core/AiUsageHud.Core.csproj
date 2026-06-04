@@ -7,6 +7,9 @@
     <!-- Surfaces trim/AOT/single-file analyzer warnings at build time and marks the
          assembly trimmable, so the Native-AOT head can link it cleanly. -->
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- Library: not a publish target on its own. A solution-level `dotnet publish`
+         then publishes only the app head; this is still pulled in as its dependency. -->
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
   <ItemGroup>
