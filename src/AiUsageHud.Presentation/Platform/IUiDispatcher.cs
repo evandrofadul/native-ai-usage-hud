@@ -1,8 +1,8 @@
 namespace AiUsageHud.Presentation.Platform;
 
 /// <summary>
-/// UI-thread services the shared view models need from the hosting framework. Each
-/// head (WPF / Avalonia) supplies its own implementation so the view models stay free
+/// UI-thread services the shared view models need from the hosting framework. The
+/// hosting head (Avalonia) supplies the implementation so the view models stay free
 /// of any UI-framework reference.
 /// </summary>
 public interface IUiDispatcher
