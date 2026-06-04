@@ -65,6 +65,7 @@ public enum ThemeId
     Cyberpunk,
     Snazzy,
     NightOwlLight,
+    Hud,
 }
 
 public static class ThemeIdExtensions
@@ -130,7 +131,8 @@ public static class ThemeIdExtensions
         ThemeId.Cyberpunk => "cyberpunk",
         ThemeId.Snazzy => "snazzy",
         ThemeId.NightOwlLight => "night-owl-light",
-        _ => "one-dark",
+        ThemeId.Hud => "hud",
+        _ => "hud",
     };
 
     /// <summary>Human label shown in Settings.</summary>
@@ -194,12 +196,14 @@ public static class ThemeIdExtensions
         ThemeId.Cyberpunk => "Cyberpunk",
         ThemeId.Snazzy => "Snazzy",
         ThemeId.NightOwlLight => "Night Owl Light",
-        _ => "One Dark",
+        ThemeId.Hud => "HUD",
+        _ => "HUD",
     };
 
     /// <summary>All themes, in the order shown in Settings.</summary>
     public static IReadOnlyList<ThemeId> All { get; } = new[]
     {
+        ThemeId.Hud,
         ThemeId.OneDark,
         ThemeId.OneLight,
         ThemeId.FluentDark,
@@ -321,6 +325,7 @@ public static class ThemeIdExtensions
         "cyberpunk" => ThemeId.Cyberpunk,
         "snazzy" => ThemeId.Snazzy,
         "night-owl-light" => ThemeId.NightOwlLight,
+        "hud" => ThemeId.Hud,
         _ => null,
     };
 }

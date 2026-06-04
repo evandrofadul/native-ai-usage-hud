@@ -1,4 +1,21 @@
 {
+  "Hud": {
+    "BgBrush": "#0C1018",
+    "Bg2Brush": "#080B12",
+    "Bg3Brush": "#161D2B",
+    "HoverBrush": "#1F2838",
+    "FgBrush": "#E6EDF7",
+    "DimBrush": "#76849B",
+    "AccentBrush": "#2BD4D9",
+    "BorderBrush": "#20293A",
+    "BarEmptyBrush": "#19212F",
+    "SevLowBrush": "#4ADE80",
+    "SevMidBrush": "#F4C13D",
+    "SevHighBrush": "#FB923C",
+    "SevCriticalBrush": "#F26D7D",
+    "CloseHoverBrush": "#F0414C",
+    "ClosePressedBrush": "#C9303B"
+  },
   "Amoled": {
     "BgBrush": "#000000",
     "Bg2Brush": "#000000",

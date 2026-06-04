@@ -18,9 +18,9 @@ namespace AiUsageHud.App.Themes;
 /// shared <see cref="PaletteColors"/> table rather than by loading a palette
 /// <c>.axaml</c> at runtime. Runtime XAML loading (<c>ResourceInclude</c> with a URI
 /// built at runtime) goes through <c>AvaloniaXamlLoader</c>, which is not trim/AOT-safe;
-/// constructing the brushes directly is. The generated <c>Themes/Palettes/*.axaml</c>
-/// files remain the source the WPF head consumes and the compile-time default in
-/// <c>App.axaml</c>.
+/// constructing the brushes directly is. The generated <c>Themes/Palettes/Hud.axaml</c>
+/// (the app's own default theme) is kept only as the compile-time default in
+/// <c>App.axaml</c>; every other palette is built in code at runtime.
 /// </summary>
 public sealed class AvaloniaThemeService : IThemeService
 {
@@ -33,7 +33,7 @@ public sealed class AvaloniaThemeService : IThemeService
         "SevHighBrush", "SevCriticalBrush", "CloseHoverBrush", "ClosePressedBrush",
     ];
 
-    public ThemeId Current { get; private set; } = ThemeId.OneDark;
+    public ThemeId Current { get; private set; } = ThemeId.Hud;
 
     public event Action? Changed;
 

@@ -52,7 +52,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         _themeService = themeService;
         _primary = config.Ui.Primary ?? VendorId.Anthropic;
-        _theme = config.Ui.Theme ?? ThemeId.OneDark;
+        _theme = config.Ui.Theme ?? ThemeId.Hud;
         _originalTheme = themeService.Current;
 
         _opacity = OpacityManager.Percent;

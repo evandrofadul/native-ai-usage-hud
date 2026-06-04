@@ -1,12 +1,12 @@
 # Single source of truth: tools/palettes.json (theme name -> 15 named colors).
 # This generator emits, from that JSON:
 #   * src/AiUsageHud.Core/Theming/PaletteColors.cs   (always)
-#   * src/AiUsageHud.App/Themes/Palettes/OneDark.axaml (when that project dir exists)
+#   * src/AiUsageHud.App/Themes/Palettes/Hud.axaml (when that project dir exists)
 #
 # The Avalonia head builds every palette at runtime from PaletteColors.cs (the AOT-safe
-# path), so it needs only OneDark.axaml — the compile-time default merged at index 0 of
-# App.axaml before AvaloniaThemeService swaps it. The other palettes are NOT emitted as
-# .axaml because they would be embedded but never loaded.
+# path), so it needs only Hud.axaml — the compile-time default (the app's own theme)
+# merged at index 0 of App.axaml before AvaloniaThemeService swaps it. The other palettes
+# are NOT emitted as .axaml because they would be embedded but never loaded.
 #
 # The JSON key equals the ThemeId enum member name, so it maps straight to `ThemeId.<key>`
 # and to the `<key>.axaml` file name.
@@ -52,8 +52,8 @@ foreach ($name in $names) {
 }
 [void]$sb.AppendLine('    };')
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('    /// <summary>The palette for a theme (falls back to One Dark for an unknown id).</summary>')
-[void]$sb.AppendLine('    public static PaletteColors For(ThemeId id) => All.TryGetValue(id, out var p) ? p : All[ThemeId.OneDark];')
+[void]$sb.AppendLine('    /// <summary>The palette for a theme (falls back to HUD for an unknown id).</summary>')
+[void]$sb.AppendLine('    public static PaletteColors For(ThemeId id) => All.TryGetValue(id, out var p) ? p : All[ThemeId.Hud];')
 [void]$sb.AppendLine('}')
 
 $coreOut = Join-Path $root 'src/AiUsageHud.Core/Theming'
@@ -83,6 +83,6 @@ function Write-Dict($dir, $ext, $headerNs, $onlyNames = $null) {
 }
 
 $avaloniaNs = 'xmlns="https://github.com/avaloniaui"' + "`n                    " + 'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'
-if (Write-Dict (Join-Path $root 'src/AiUsageHud.App/Themes/Palettes') '.axaml' $avaloniaNs @('OneDark')) {
-  Write-Host "Wrote Avalonia OneDark.axaml (bootstrap default; runtime palettes come from PaletteColors.cs)"
+if (Write-Dict (Join-Path $root 'src/AiUsageHud.App/Themes/Palettes') '.axaml' $avaloniaNs @('Hud')) {
+  Write-Host "Wrote Avalonia Hud.axaml (bootstrap default; runtime palettes come from PaletteColors.cs)"
 }

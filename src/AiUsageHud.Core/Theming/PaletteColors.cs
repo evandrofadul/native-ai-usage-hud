@@ -37,6 +37,7 @@ public sealed record PaletteColors(string Bg, string Bg2, string Bg3, string Hov
         [ThemeId.GruvboxDark] = new("#282828", "#1D2021", "#3C3836", "#504945", "#EBDBB2", "#928374", "#83A598", "#504945", "#3C3836", "#B8BB26", "#FABD2F", "#FE8019", "#FB4934", "#FB4934", "#CC241D"),
         [ThemeId.GruvboxLight] = new("#FBF1C7", "#F2E5BC", "#EBDBB2", "#D5C4A1", "#3C3836", "#7C6F64", "#458588", "#D5C4A1", "#EBDBB2", "#98971A", "#D79921", "#D65D0E", "#CC241D", "#CC241D", "#9D0006"),
         [ThemeId.Horizon] = new("#1C1E26", "#161821", "#2E303E", "#3D4054", "#D5C8C6", "#8D8B9B", "#E95678", "#2E303E", "#2E303E", "#29D398", "#FAC29A", "#FAB795", "#E95678", "#E95678", "#B33D5B"),
+        [ThemeId.Hud] = new("#0C1018", "#080B12", "#161D2B", "#1F2838", "#E6EDF7", "#76849B", "#2BD4D9", "#20293A", "#19212F", "#4ADE80", "#F4C13D", "#FB923C", "#F26D7D", "#F0414C", "#C9303B"),
         [ThemeId.Kanagawa] = new("#1F1F28", "#16161D", "#2A2A37", "#363646", "#DCD7BA", "#727169", "#7E9CD8", "#2A2A37", "#2A2A37", "#98BB6C", "#E6C384", "#FFA066", "#FF5D62", "#FF5D62", "#E04A50"),
         [ThemeId.MaterialOcean] = new("#0F111A", "#090B10", "#1A1C23", "#282A36", "#8F93A2", "#4B5263", "#82AAFF", "#282A36", "#1A1C23", "#C3E88D", "#FFCB6B", "#F78C6C", "#FF5370", "#FF5370", "#E04860"),
         [ThemeId.MaterialPalenight] = new("#292D3E", "#222637", "#34394D", "#3C4254", "#A6ACCD", "#676E95", "#82AAFF", "#3C4254", "#34394D", "#C3E88D", "#FFCB6B", "#F78C6C", "#FF5370", "#FF5370", "#E04860"),
@@ -73,6 +74,6 @@ public sealed record PaletteColors(string Bg, string Bg2, string Bg3, string Hov
         [ThemeId.Zenburn] = new("#3F3F3F", "#373737", "#4D4D4D", "#575757", "#DCDCCC", "#9F9F9F", "#8CD0D3", "#676767", "#676767", "#7F9F7F", "#F0DFAF", "#DEB9A1", "#CC9393", "#CC9393", "#A46B6B"),
     };
 
-    /// <summary>The palette for a theme (falls back to One Dark for an unknown id).</summary>
-    public static PaletteColors For(ThemeId id) => All.TryGetValue(id, out var p) ? p : All[ThemeId.OneDark];
+    /// <summary>The palette for a theme (falls back to HUD for an unknown id).</summary>
+    public static PaletteColors For(ThemeId id) => All.TryGetValue(id, out var p) ? p : All[ThemeId.Hud];
 }

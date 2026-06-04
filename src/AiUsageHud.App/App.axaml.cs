@@ -63,7 +63,7 @@ public partial class App : Application
             var config = LoadConfigSafe();
 
             // Apply the saved color theme + window transparency before any window is shown.
-            _theme.Apply(config.Ui.Theme ?? ThemeId.OneDark);
+            _theme.Apply(config.Ui.Theme ?? ThemeId.Hud);
             OpacityManager.Apply(
                 config.Ui.Opacity ?? OpacityManager.DefaultPercent,
                 config.Ui.OpacityAffectsTray ?? false);
