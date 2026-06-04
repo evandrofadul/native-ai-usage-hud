@@ -1,5 +1,11 @@
 # AI Usage HUD
 
+[![CI](https://github.com/evandrofadul/native-ai-usage-hud/actions/workflows/ci.yml/badge.svg)](https://github.com/evandrofadul/native-ai-usage-hud/actions/workflows/ci.yml)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![Avalonia](https://img.shields.io/badge/UI-Avalonia-8B44AC?logo=avaloniaui&logoColor=white)
+![Native AOT](https://img.shields.io/badge/Native-AOT-2E7D32)
+![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-1E88E5)
+
 **Native-AOT, cross-platform** AI plan-usage monitor (Avalonia) for
 **Anthropic Claude**, **OpenAI Codex/ChatGPT**, **GitHub Copilot** and
 **Gemini CLI**, living in the system tray. Runs on **Windows** and **Linux**,
