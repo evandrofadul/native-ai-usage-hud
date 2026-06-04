@@ -3,8 +3,10 @@
 **Native-AOT, cross-platform** AI plan-usage monitor (Avalonia) for
 **Anthropic Claude**, **OpenAI Codex/ChatGPT**, **GitHub Copilot** and
 **Gemini CLI**, living in the system tray. Runs on **Windows** and **Linux**,
-compiled to a single self-contained native binary — an Avalonia port of the
-original `ai-usagebar` (Rust).
+compiled ahead-of-time to a self-contained native executable that needs no .NET
+runtime on the target (it ships next to Avalonia's handful of native render
+libraries — Skia, HarfBuzz, ANGLE) — an Avalonia port of the original
+`ai-usagebar` (Rust).
 
 It reuses the credentials the official CLIs already wrote to disk (`claude`,
 `codex`, `copilot` / `gh`, `gemini`) and calls the same undocumented usage
@@ -12,7 +14,7 @@ endpoints, so there is no separate in-app login.
 
 > **Built for Native AOT from the ground up.** The entire stack is written to be
 > reflection-free and trim-safe — source-generated JSON, compiled XAML bindings,
-> and an AOT-compatible core — for near-instant startup, no JIT, and a small
+> and an AOT-compatible core — for near-instant startup, no JIT, and a low memory
 > footprint. See [Native AOT](#native-aot-a-first-class-goal) for the specifics.
 
 > **Theme it to match your setup.** A first-class focus: the app ships **59 built-in
@@ -31,7 +33,7 @@ Supported vendors:
 
 ## Screenshots
 
-| Windows | Linux (GNOME) |
+| Windows | Linux (COSMIC) |
 |:---:|:---:|
 | [![AI Usage HUD on Windows](docs/screenshots/windows.png)](docs/screenshots/windows.png) | [![AI Usage HUD on Linux](docs/screenshots/linux.png)](docs/screenshots/linux.png) |
 
@@ -79,9 +81,11 @@ dotnet run --project src/AiUsageHud.App
 
 ### Build a distributable executable
 
-The app publishes as a single self-contained **Native-AOT** binary — no .NET runtime
-on the target. Every AOT/trim/size setting lives in the app project, so a **bare**
-publish does the right thing (no extra `-p:` flags):
+The app publishes as a self-contained **Native-AOT** executable — no .NET runtime on
+the target — alongside Avalonia's native render libraries (`libSkiaSharp`,
+`libHarfBuzzSharp`, `av_libglesv2`), which can't be linked into the managed AOT image.
+Every AOT/trim/size setting lives in the app project, so a **bare** publish does the
+right thing (no extra `-p:` flags):
 
 ```powershell
 dotnet publish -c Release -r win-x64    # Windows
@@ -90,12 +94,14 @@ dotnet publish -c Release -r linux-x64  # Linux
 
 Only the app head is published — the libraries are marked `IsPublishable=false`, so a
 solution-level publish emits just the app (they are still built and bundled as its
-dependencies). The output lands under `src/AiUsageHud.App/bin/Release/net10.0/<rid>/publish/`.
+dependencies). The output lands under `src/AiUsageHud.App/bin/Release/net10.0/<rid>/publish/`
+as the `AiUsageHud` executable plus the three native render `.dll`/`.so` files above — to
+distribute, ship that folder (the `.pdb` files are optional debug symbols).
 See [Native AOT](#native-aot-a-first-class-goal) for what's enabled and the toolchain it needs.
 
 This publish mode is framework-dependent, so the target machine needs the .NET
-10 Runtime installed. (For a fully standalone binary, use the Native AOT publish
-below.)
+10 Runtime installed. (For a self-contained build that needs no runtime on the
+target, use the Native AOT publish below.)
 
 ## Layout
 
@@ -234,8 +240,9 @@ reflection. Concretely:
   live in the app `.csproj` under a RID-guarded property group — so they apply only to
   `-r`-targeted publishes, never to `dotnet run` / Debug or CI's `dotnet build`.
 
-A self-contained, AOT-compiled binary (no .NET runtime required on the target)
-comes out of a bare publish:
+A self-contained, AOT-compiled executable (no .NET runtime required on the target)
+comes out of a bare publish — the native render libraries (`libSkiaSharp`,
+`libHarfBuzzSharp`, `av_libglesv2`) sit beside it in the publish folder:
 
 ```powershell
 dotnet publish -c Release -r win-x64    # on Windows
