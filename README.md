@@ -8,16 +8,64 @@ It reuses the credentials the official CLIs already wrote to disk (`claude`,
 `codex`, `copilot`/`gh`, `gemini`) and the same undocumented usage endpoints, so
 there is no separate login.
 
-## Form factor
+Supported vendors:
 
-A single window reachable from a **system-tray icon**:
+- Anthropic Claude
+- OpenAI Codex / ChatGPT
+- GitHub Copilot
+- Z.AI (GLM)
+- OpenRouter
 
-- Left-click the tray icon → open/focus the window.
-- The window has one tab per enabled vendor, each with usage gauges, reset
-  countdowns, pacing, credits, etc.
-- Closing the window hides it back to the tray; **Quit** is on the tray menu.
-- The tray icon shows the active vendor's 3-letter id colored by severity, and a
-  tooltip with `session% · reset`.
+The app reuses credentials that the official CLIs already wrote to disk
+(`claude`, `codex`, `copilot` / `gh`) and calls the same undocumented usage
+endpoints, so there is no separate in-app login.
+
+## Form Factor
+
+- The app starts hidden in the system tray.
+- Left-click the tray icon to open or focus the main window.
+- The window shows one tab per enabled vendor with usage gauges, reset
+  countdowns, pacing, credits, and related stats.
+- Anthropic and OpenAI tabs also show local Claude Code / Codex token usage for
+  the active project or workspace when those local logs are available.
+- Closing the window hides it back to the tray.
+- Use **Quit** from the tray menu to exit the app.
+- The tray icon shows the active vendor's short id, colored by severity, plus a
+  tooltip with compact usage information.
+
+## Install
+
+### Run from source
+
+1. Install the .NET 10 SDK with the Windows Desktop workload.
+2. Authenticate the vendors you want to use.
+3. Optionally create `%APPDATA%\ai-usagebar\config.toml`.
+4. Run the app.
+
+Authentication prerequisites:
+
+- Anthropic: run `claude` and sign in.
+- OpenAI: run `codex login`.
+- Copilot: sign in with the GitHub Copilot CLI or `gh auth login`.
+- Z.AI: set `ZAI_API_KEY` or add `[zai].api_key` in `config.toml`.
+- OpenRouter: set `OPENROUTER_API_KEY` or add `[openrouter].api_key` in `config.toml`.
+
+```powershell
+dotnet build
+dotnet test
+dotnet run --project src/AiUsageBar.App
+```
+
+### Build a distributable executable
+
+```powershell
+dotnet publish src/AiUsageBar.App/AiUsageBar.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true
+```
+
+The published output lands under `src/AiUsageBar.App/bin/Release/net10.0-windows/win-x64/publish/`.
+
+This publish mode is framework-dependent, so the target machine needs the .NET
+10 Windows Desktop Runtime installed.
 
 ## Layout
 
@@ -87,9 +135,11 @@ project:
 
 [anthropic]
 enabled = true
+# credentials_path = "C:/Users/name/.claude/.credentials.json"
 
 [openai]
 enabled = true
+# codex_auth_path = "C:/Users/name/.codex/auth.json"
 
 [copilot]
 enabled = true
@@ -108,7 +158,7 @@ The in-app **Settings** dialog edits `[ui]` (primary, theme, opacity, launch-at-
 preserving the file's comments and unrelated fields. `[gemini].group_by_variant` is
 file-only for now.
 
-## Build & run
+## Build, Test, And Publish
 
 ```powershell
 dotnet build
@@ -148,8 +198,9 @@ dotnet publish src/AiUsageBar.AvaloniaApp -c Release -r linux-x64  # on Linux
 
 ## Differences from the original (Rust / Waybar)
 
-- Tray icon + window instead of the Waybar widget and the terminal TUI.
-- No Omarchy theme integration — ships the One Dark palette.
-- No `SIGRTMIN` signaling — the app auto-refreshes on a 60s `DispatcherTimer`.
+- Tray icon + window instead of the Waybar widget and terminal TUI.
+- No Omarchy theme integration.
+- The default theme is One Dark, but the Windows app ships multiple built-in palettes.
+- No `SIGRTMIN` signaling; the app auto-refreshes on a 60-second `DispatcherTimer`.
 - File locking uses `FileShare.None` retries instead of `flock`.
-- Config protection relies on the per-user profile directory.
+- Config and cache storage use per-user Windows profile directories.

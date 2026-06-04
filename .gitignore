@@ -1,6 +1,24 @@
+# Build outputs
 bin/
 obj/
+artifacts/
+
+# Test and coverage outputs
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage-results/
+
+# User- and machine-specific files
 *.user
+*.rsuser
+*.suo
+
+# IDE / local tooling
 .vs/
 .claude/
+
+# Misc local lockfiles
 package-lock.json
