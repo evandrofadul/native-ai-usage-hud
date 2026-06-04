@@ -1,10 +1,8 @@
 using System.Text;
 using AiUsageBar.Core.Vendors.Anthropic;
 using AiUsageBar.Core.Vendors.Copilot;
+using AiUsageBar.Core.Vendors.Gemini;
 using AiUsageBar.Core.Vendors.OpenAi;
-using AiUsageBar.Core.Vendors.OpenRouter;
-using AiUsageBar.Core.Vendors.Zai;
-using Xunit;
 
 namespace AiUsageBar.Core.Tests;
 
@@ -157,82 +155,6 @@ public class VendorTypesTests
         return $"{B64("""{"alg":"none"}""")}.{B64(claims)}.sig";
     }
 
-    // ---- Z.AI ----
-
-    [Fact]
-    public void ZaiParsesRealShape()
-    {
-        var snap = ZaiEnvelope.Parse(B("""
-            {"code":200,"msg":"ok","data":{"limits":[
-              {"type":"TOKENS_LIMIT","percentage":0},
-              {"type":"TOKENS_LIMIT","percentage":0,"nextResetTime":1779792169974},
-              {"type":"TIME_LIMIT","percentage":0,"nextResetTime":1779964969979}
-            ],"level":"pro"},"success":true}
-            """)).ToSnapshot(null);
-        Assert.Equal("GLM Coding Pro", snap.Plan);
-        Assert.NotNull(snap.Session);
-        Assert.NotNull(snap.Weekly);
-        Assert.NotNull(snap.Mcp);
-        Assert.NotNull(snap.Weekly!.Value.ResetsAt);
-    }
-
-    [Fact]
-    public void ZaiPercentageRoundsAndClamps()
-    {
-        var s1 = ZaiEnvelope.Parse(B("""{"data":{"limits":[{"type":"TOKENS_LIMIT","percentage":42.7}],"level":"max"}}""")).ToSnapshot(null);
-        Assert.Equal(43, s1.Session!.Value.UtilizationPct);
-        var s2 = ZaiEnvelope.Parse(B("""{"data":{"limits":[{"type":"TOKENS_LIMIT","percentage":150}]}}""")).ToSnapshot(null);
-        Assert.Equal(100, s2.Session!.Value.UtilizationPct);
-    }
-
-    [Fact]
-    public void ZaiConfigTierUsedWhenLevelEmpty()
-    {
-        var snap = ZaiEnvelope.Parse(B("""{"data":{"limits":[],"level":""},"success":true}""")).ToSnapshot("max");
-        Assert.Equal("GLM Coding Max", snap.Plan);
-    }
-
-    [Fact]
-    public void ZaiOnlyTimeLimitMeansNoSessionOrWeekly()
-    {
-        var snap = ZaiEnvelope.Parse(B("""{"data":{"limits":[{"type":"TIME_LIMIT","percentage":12}]}}""")).ToSnapshot(null);
-        Assert.Null(snap.Session);
-        Assert.Null(snap.Weekly);
-        Assert.NotNull(snap.Mcp);
-    }
-
-    // ---- OpenRouter ----
-
-    [Fact]
-    public void OpenRouterCombineBuildsSnapshot()
-    {
-        var c = OpenRouterMapping.ParseCredits("""{"data":{"total_credits":100.0,"total_usage":30.0}}""");
-        var k = OpenRouterMapping.ParseKey("""
-            {"data":{"label":"key-A","limit":50.0,"limit_remaining":20.0,
-             "usage":30.0,"usage_daily":1.0,"usage_weekly":5.0,"usage_monthly":30.0,"is_free_tier":false}}
-            """);
-        var snap = OpenRouterMapping.Combine(c, k);
-        Assert.Equal("OpenRouter — key-A", snap.Label);
-        Assert.Equal(70.0, snap.Balance(), 9);
-        Assert.Equal(30, snap.ConsumedPct());
-        Assert.Equal(30.0, snap.UsageMonthly);
-    }
-
-    [Fact]
-    public void OpenRouterEmptyLabelDefaults()
-    {
-        var snap = OpenRouterMapping.Combine(new(), new());
-        Assert.Equal("OpenRouter", snap.Label);
-    }
-
-    [Fact]
-    public void OpenRouterCacheRoundTrips()
-    {
-        var snap = new Core.Models.OpenRouterSnapshot("OpenRouter — k", 100, 25, 1, 5, 25, false, 50, 25);
-        var back = OpenRouterCacheDto.Deserialize(OpenRouterCacheDto.Serialize(snap));
-        Assert.Equal(snap, back);
-    }
-
     // ---- Copilot ----
 
     [Fact]
@@ -288,5 +210,95 @@ public class VendorTypesTests
         Assert.Equal(token, CopilotCreds.ExtractToken(Encoding.UTF8.GetBytes(token)));
         Assert.Equal(token, CopilotCreds.ExtractToken(Encoding.Unicode.GetBytes(token)));
         Assert.Null(CopilotCreds.ExtractToken(Encoding.UTF8.GetBytes("no token here")));
+    }
+
+    // ---- Gemini ----
+
+    [Fact]
+    public void GeminiParsesBucketsAndMapsUtilization()
+    {
+        var snap = GeminiQuotaResponse.Parse(B("""
+            {"buckets":[
+              {"modelId":"gemini-2.5-flash","tokenType":"REQUESTS","remainingFraction":0.99,
+               "remainingAmount":"990","resetTime":"2026-06-03T00:00:00Z"},
+              {"modelId":"gemini-2.5-pro","remainingFraction":0.95},
+              {"tokenType":"REQUESTS","remainingFraction":0.5},
+              {"modelId":"gemini-2.5-flash-lite"}
+            ]}
+            """)).ToSnapshot("Gemini Free");
+
+        Assert.Equal("Gemini Free", snap.Plan);
+        // Buckets missing modelId or remainingFraction are dropped.
+        Assert.Equal(2, snap.Quotas.Count);
+        var flash = snap.Quotas[0];
+        Assert.Equal("gemini-2.5-flash", flash.Model);
+        Assert.Equal(1, flash.UtilizationPct); // 1 - 0.99 → 1%
+        Assert.Equal(990, flash.Remaining);
+        Assert.NotNull(flash.ResetsAt);
+        Assert.Equal(5, snap.Quotas[1].UtilizationPct); // 1 - 0.95 → 5%
+        Assert.Null(snap.Quotas[1].ResetsAt);
+    }
+
+    [Fact]
+    public void GeminiEmptyResponseYieldsNoQuotas()
+    {
+        var snap = GeminiQuotaResponse.Parse(B("{}")).ToSnapshot("Gemini");
+        Assert.Empty(snap.Quotas);
+    }
+
+    [Fact]
+    public void GeminiPlanLabelFromTier()
+    {
+        Assert.Equal("Gemini Standard", Plan("""{"currentTier":{"id":"standard-tier"}}"""));
+        Assert.Equal("Gemini Free", Plan("""{"currentTier":{"id":"free-tier"}}"""));
+        Assert.Equal("Gemini Pro Plan", Plan("""{"currentTier":{"id":"x","name":"Pro Plan"}}"""));
+        // A name that already carries the brand isn't prefixed again.
+        Assert.Equal("Gemini Code Assist", Plan("""{"currentTier":{"name":"Gemini Code Assist"}}"""));
+        Assert.Equal("Gemini", Plan("{}"));
+    }
+
+    private static string Plan(string json) => GeminiLoadResponse.Parse(B(json)).PlanLabel();
+
+    [Fact]
+    public void GeminiGroupsByVariantWithHighestPct()
+    {
+        var snap = GeminiQuotaResponse.Parse(B("""
+            {"buckets":[
+              {"modelId":"gemini-2.5-flash","remainingFraction":0.99},
+              {"modelId":"gemini-3-flash-preview","remainingFraction":0.90},
+              {"modelId":"gemini-2.5-flash-lite","remainingFraction":0.99},
+              {"modelId":"gemini-2.5-pro","remainingFraction":0.95},
+              {"modelId":"gemini-3.1-pro-preview","remainingFraction":0.80}
+            ]}
+            """)).ToSnapshot("Gemini Free");
+
+        var grouped = snap.GroupedByVariant();
+        // Three tiers, each the highest usage in its variant, ordered desc.
+        Assert.Equal(3, grouped.Count);
+        Assert.Equal("Pro", grouped[0].Model);
+        Assert.Equal(20, grouped[0].UtilizationPct);        // 1 − 0.80
+        Assert.Equal("Flash", grouped[1].Model);
+        Assert.Equal(10, grouped[1].UtilizationPct);        // 1 − 0.90 (beats 0.99)
+        Assert.Equal("Flash Lite", grouped[2].Model);
+        Assert.Equal(1, grouped[2].UtilizationPct);
+    }
+
+    [Fact]
+    public void GeminiVariantOfMapsTiers()
+    {
+        Assert.Equal("Flash Lite", Core.Models.GeminiSnapshot.VariantOf("gemini-3.1-flash-lite-preview"));
+        Assert.Equal("Flash", Core.Models.GeminiSnapshot.VariantOf("gemini-2.5-flash"));
+        Assert.Equal("Pro", Core.Models.GeminiSnapshot.VariantOf("gemini-3.1-pro-preview"));
+        Assert.Equal("imagen-3", Core.Models.GeminiSnapshot.VariantOf("imagen-3")); // unknown tier → raw id
+    }
+
+    [Fact]
+    public void GeminiCacheRoundTrips()
+    {
+        var snap = new Core.Models.GeminiSnapshot("Gemini Free",
+            [new Core.Models.GeminiQuota("gemini-2.5-flash", 12, DateTimeOffset.Parse("2026-06-03T00:00:00Z"), 880)]);
+        var back = GeminiCacheDto.Deserialize(GeminiCacheDto.Serialize(snap));
+        Assert.Equal(snap.Plan, back.Plan);
+        Assert.Equal(snap.Quotas, back.Quotas); // GeminiQuota is a scalar record → element-wise equality
     }
 }

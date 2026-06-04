@@ -1,6 +1,5 @@
 using AiUsageBar.Core.Config;
 using AiUsageBar.Core.Models;
-using Xunit;
 
 namespace AiUsageBar.Core.Tests;
 
@@ -16,14 +15,26 @@ public class ConfigWriterTests : IDisposable
     [Fact]
     public void WritesMinimalTomlWhenStartingEmpty()
     {
-        ConfigWriter.Save(_path, VendorId.Zai, ThemeId.OneDark, "zk", "ok");
+        ConfigWriter.Save(_path, VendorId.Gemini, ThemeId.OneDark);
         var raw = File.ReadAllText(_path);
-        Assert.Contains("primary = \"zai\"", raw);
+        Assert.Contains("primary = \"gemini\"", raw);
         Assert.Contains("theme = \"one-dark\"", raw);
-        Assert.Contains("[zai]", raw);
-        Assert.Contains("api_key = \"zk\"", raw);
-        Assert.Contains("[openrouter]", raw);
-        Assert.Contains("api_key = \"ok\"", raw);
+    }
+
+    [Fact]
+    public void WritesOpacityAndStartupAsUnquotedScalars()
+    {
+        ConfigWriter.Save(_path, VendorId.Anthropic, ThemeId.Nord, opacity: 80,
+            opacityAffectsTray: true, launchAtStartup: false);
+        var raw = File.ReadAllText(_path);
+        Assert.Contains("opacity = 80", raw);
+        Assert.Contains("opacity_affects_tray = true", raw);
+        Assert.Contains("launch_at_startup = false", raw);
+
+        var cfg = AppConfig.LoadFrom(_path);
+        Assert.Equal(80, cfg.Ui.Opacity);
+        Assert.True(cfg.Ui.OpacityAffectsTray);
+        Assert.False(cfg.Ui.LaunchAtStartup);
     }
 
     [Fact]
@@ -35,44 +46,26 @@ public class ConfigWriterTests : IDisposable
             # pre-existing comment
             primary = "anthropic"
 
-            [zai]
+            [gemini]
             enabled = true
-            api_key_env = "ZAI_API_KEY"
-            # tier comment
-            plan_tier = "pro"
-
-            [openrouter]
-            enabled = true
-            api_key_env = "OPENROUTER_API_KEY"
+            # project comment
+            project_id = "my-proj-42"
             """);
 
-        ConfigWriter.Save(_path, VendorId.Openrouter, ThemeId.Nord, "zk2", "ok2");
+        ConfigWriter.Save(_path, VendorId.Gemini, ThemeId.Nord);
         var raw = File.ReadAllText(_path);
 
         Assert.Contains("# my comment", raw);
         Assert.Contains("# pre-existing comment", raw);
-        Assert.Contains("# tier comment", raw);
-        Assert.Contains("api_key_env = \"ZAI_API_KEY\"", raw);
-        Assert.Contains("plan_tier = \"pro\"", raw);
-        Assert.Contains("primary = \"openrouter\"", raw);
+        Assert.Contains("# project comment", raw);
+        Assert.Contains("project_id = \"my-proj-42\"", raw);
+        Assert.Contains("primary = \"gemini\"", raw);
         Assert.Contains("theme = \"nord\"", raw);
-        Assert.Contains("api_key = \"zk2\"", raw);
-        Assert.Contains("api_key = \"ok2\"", raw);
 
         // And it round-trips through the parser.
         var cfg = AppConfig.LoadFrom(_path);
-        Assert.Equal(VendorId.Openrouter, cfg.Ui.Primary);
+        Assert.Equal(VendorId.Gemini, cfg.Ui.Primary);
         Assert.Equal(ThemeId.Nord, cfg.Ui.Theme);
-        Assert.Equal("zk2", cfg.Zai.ApiKey);
-        Assert.Equal("ok2", cfg.Openrouter.ApiKey);
-    }
-
-    [Fact]
-    public void DoesNotWriteEmptyKeys()
-    {
-        ConfigWriter.Save(_path, VendorId.Anthropic, ThemeId.OneDark, "", "");
-        var raw = File.ReadAllText(_path);
-        Assert.DoesNotContain("api_key =", raw);
-        Assert.Contains("primary = \"anthropic\"", raw);
+        Assert.Equal("my-proj-42", cfg.Gemini.ProjectId);
     }
 }

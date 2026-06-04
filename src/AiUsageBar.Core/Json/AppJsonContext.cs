@@ -2,9 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AiUsageBar.Core.Vendors.Anthropic;
 using AiUsageBar.Core.Vendors.Copilot;
+using AiUsageBar.Core.Vendors.Gemini;
 using AiUsageBar.Core.Vendors.OpenAi;
-using AiUsageBar.Core.Vendors.OpenRouter;
-using AiUsageBar.Core.Vendors.Zai;
 
 namespace AiUsageBar.Core.Json;
 
@@ -20,8 +19,8 @@ namespace AiUsageBar.Core.Json;
 /// <c>LenientConverters.cs</c>) are honored by the generator.
 ///
 /// <see cref="JsonSerializableAttribute.TypeInfoPropertyName"/> is set wherever a
-/// short type name would collide (the two vendors' <c>RefreshRequest</c>/
-/// <c>RefreshResponse</c>, and the generic <c>OrEnvelope&lt;T&gt;</c> closures).
+/// short type name would collide (the vendors' <c>RefreshRequest</c>/
+/// <c>RefreshResponse</c> types).
 /// </summary>
 [JsonSourceGenerationOptions(
     PropertyNameCaseInsensitive = true,
@@ -39,13 +38,15 @@ namespace AiUsageBar.Core.Json;
 [JsonSerializable(typeof(Tokens))]
 [JsonSerializable(typeof(OpenAiOAuth.RefreshResponse), TypeInfoPropertyName = "OpenAiRefreshResponse")]
 [JsonSerializable(typeof(OpenAiOAuth.RefreshRequest), TypeInfoPropertyName = "OpenAiRefreshRequest")]
-// OpenRouter
-[JsonSerializable(typeof(OrEnvelope<CreditsData>), TypeInfoPropertyName = "OrEnvelopeCreditsData")]
-[JsonSerializable(typeof(OrEnvelope<KeyData>), TypeInfoPropertyName = "OrEnvelopeKeyData")]
-[JsonSerializable(typeof(OpenRouterCacheDto))]
 // Copilot
 [JsonSerializable(typeof(CopilotUserResponse))]
 [JsonSerializable(typeof(CopilotCacheDto))]
-// Z.AI
-[JsonSerializable(typeof(ZaiEnvelope))]
+// Gemini
+[JsonSerializable(typeof(GeminiOauthCreds))]
+[JsonSerializable(typeof(GeminiOAuth.RefreshResponse), TypeInfoPropertyName = "GeminiRefreshResponse")]
+[JsonSerializable(typeof(GeminiLoadRequest))]
+[JsonSerializable(typeof(GeminiLoadResponse))]
+[JsonSerializable(typeof(GeminiQuotaRequest))]
+[JsonSerializable(typeof(GeminiQuotaResponse))]
+[JsonSerializable(typeof(GeminiCacheDto))]
 internal sealed partial class AppJsonContext : JsonSerializerContext;

@@ -23,7 +23,7 @@
     <AssemblyName>AiUsageBar</AssemblyName>
     <AssemblyTitle>AI Usage Bar</AssemblyTitle>
     <Product>AI Usage Bar</Product>
-    <Description>System-tray monitor for Anthropic Claude, OpenAI Codex, GitHub Copilot, Z.AI and OpenRouter plan usage.</Description>
+    <Description>System-tray monitor for Anthropic Claude, OpenAI Codex, GitHub Copilot and Google Gemini plan usage.</Description>
     <Authors>Evandro Fadul</Authors>
     <Company>Evandro Fadul</Company>
     <Copyright>Copyright © 2026 Evandro Fadul</Copyright>
@@ -36,7 +36,6 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.17" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.17" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="FluentIcons.Avalonia" Version="1.2.315" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
   </ItemGroup>
 

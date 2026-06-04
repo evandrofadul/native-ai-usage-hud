@@ -2,41 +2,87 @@ using AiUsageBar.Core;
 using AiUsageBar.Core.Models;
 using AiUsageBar.Core.Pacing;
 using AiUsageBar.Core.TokenTracking;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AiUsageBar.Presentation.ViewModels;
 
-/// <summary>Base for a panel row. Port of the Rust <c>panels.rs Section</c> enum.</summary>
-public abstract class SectionVm;
+/// <summary>
+/// Base for a panel row. Port of the Rust <c>panels.rs Section</c> enum.
+/// Rows are <see cref="ObservableObject"/>s and refresh themselves in place via
+/// <see cref="UpdateFrom"/> — the list is reconciled instead of rebuilt, so a refresh
+/// only repaints the values that changed rather than tearing down and re-creating every
+/// container (which is what made the panel flicker on each update).
+/// </summary>
+public abstract class SectionVm : ObservableObject
+{
+    /// <summary>
+    /// Copy the values from <paramref name="other"/> (which must be the same runtime type)
+    /// into this instance, raising change notifications so the existing visual updates in
+    /// place. No-op if the types differ.
+    /// </summary>
+    public abstract void UpdateFrom(SectionVm other);
+}
 
 /// <summary>Plan/vendor title with an optional right-aligned "Updated …" annotation.</summary>
-public sealed class TitleSectionVm : SectionVm
+public sealed partial class TitleSectionVm : SectionVm
 {
-    public required string Left { get; init; }
-    public string? Right { get; set; }
+    [ObservableProperty] private string _left = "";
+    [ObservableProperty] private string? _right;
+
+    public override void UpdateFrom(SectionVm other)
+    {
+        if (other is not TitleSectionVm o) return;
+        Left = o.Left;
+        Right = o.Right;
+    }
 }
 
 /// <summary>Label + gauge + value + dim footnote.</summary>
-public sealed class MetricSectionVm : SectionVm
+public sealed partial class MetricSectionVm : SectionVm
 {
-    public required string Label { get; init; }
-    public required int Pct { get; init; }
-    public required PaceSeverity Severity { get; init; }
-    public required string ValueLabel { get; init; }
-    public required string Footnote { get; init; }
+    [ObservableProperty] private string _label = "";
+    [ObservableProperty] private int _pct;
+    [ObservableProperty] private PaceSeverity _severity;
+    [ObservableProperty] private string _valueLabel = "";
+    [ObservableProperty] private string _footnote = "";
+
+    public override void UpdateFrom(SectionVm other)
+    {
+        if (other is not MetricSectionVm o) return;
+        Label = o.Label;
+        Pct = o.Pct;
+        Severity = o.Severity;
+        ValueLabel = o.ValueLabel;
+        Footnote = o.Footnote;
+    }
 }
 
 /// <summary>A label followed by one or more dim body lines.</summary>
-public sealed class BlockSectionVm : SectionVm
+public sealed partial class BlockSectionVm : SectionVm
 {
-    public required string Label { get; init; }
-    public required IReadOnlyList<string> Body { get; init; }
+    [ObservableProperty] private string _label = "";
+    [ObservableProperty] private IReadOnlyList<string> _body = [];
+
+    public override void UpdateFrom(SectionVm other)
+    {
+        if (other is not BlockSectionVm o) return;
+        Label = o.Label;
+        Body = o.Body;
+    }
 }
 
 /// <summary>Free-form key/value (or message) line.</summary>
-public sealed class TextSectionVm : SectionVm
+public sealed partial class TextSectionVm : SectionVm
 {
-    public string Label { get; init; } = "";
-    public required string Value { get; init; }
+    [ObservableProperty] private string _label = "";
+    [ObservableProperty] private string _value = "";
+
+    public override void UpdateFrom(SectionVm other)
+    {
+        if (other is not TextSectionVm o) return;
+        Label = o.Label;
+        Value = o.Value;
+    }
 }
 
 /// <summary>
@@ -44,14 +90,25 @@ public sealed class TextSectionVm : SectionVm
 /// transcripts, not the vendor API). Shows the current session total + breakdown,
 /// the project-wide total, and the top models.
 /// </summary>
-public sealed class TokenSectionVm : SectionVm
+public sealed partial class TokenSectionVm : SectionVm
 {
-    public required string Title { get; init; }
-    public required string Project { get; init; }
-    public required string SessionTotal { get; init; }
-    public required string SessionBreakdown { get; init; }
-    public required string ProjectTotal { get; init; }
-    public required IReadOnlyList<string> Models { get; init; }
+    [ObservableProperty] private string _title = "";
+    [ObservableProperty] private string _project = "";
+    [ObservableProperty] private string _sessionTotal = "";
+    [ObservableProperty] private string _sessionBreakdown = "";
+    [ObservableProperty] private string _projectTotal = "";
+    [ObservableProperty] private IReadOnlyList<string> _models = [];
+
+    public override void UpdateFrom(SectionVm other)
+    {
+        if (other is not TokenSectionVm o) return;
+        Title = o.Title;
+        Project = o.Project;
+        SessionTotal = o.SessionTotal;
+        SessionBreakdown = o.SessionBreakdown;
+        ProjectTotal = o.ProjectTotal;
+        Models = o.Models;
+    }
 
     public static TokenSectionVm From(ProjectTokenUsage u, string title) => new()
     {
@@ -90,7 +147,8 @@ public sealed class TokenSectionVm : SectionVm
 /// </summary>
 public static class SectionBuilder
 {
-    public static List<SectionVm> Build(TabResult result, DateTimeOffset now, int paceTolerance)
+    public static List<SectionVm> Build(TabResult result, DateTimeOffset now, int paceTolerance,
+        bool geminiGroupByVariant = false)
     {
         switch (result)
         {
@@ -107,8 +165,7 @@ public static class SectionBuilder
                     AnthropicSnapshot s => Anthropic(s, now, paceTolerance),
                     OpenAiSnapshot s => OpenAi(s, now, paceTolerance),
                     CopilotSnapshot s => Copilot(s, now),
-                    ZaiSnapshot s => Zai(s, now),
-                    OpenRouterSnapshot s => OpenRouter(s),
+                    GeminiSnapshot s => Gemini(s, now, geminiGroupByVariant),
                     _ => [],
                 };
 
@@ -203,37 +260,31 @@ public static class SectionBuilder
         return v;
     }
 
-    private static List<SectionVm> Zai(ZaiSnapshot s, DateTimeOffset now)
+    private static List<SectionVm> Gemini(GeminiSnapshot s, DateTimeOffset now, bool groupByVariant)
     {
         var v = new List<SectionVm> { new TitleSectionVm { Left = s.Plan } };
-        if (s.Session is { } se) PushWindow(v, "Session (5h)", se, now, 5, false);
-        if (s.Weekly is { } w) PushWindow(v, "Weekly", w, now, 5, false);
-        if (s.Mcp is { } m) PushWindow(v, "MCP tools (monthly)", m, now, 5, false);
-        if (s.Session is null && s.Weekly is null && s.Mcp is null)
-            v.Add(new TextSectionVm { Value = "no usage windows reported" });
-        return v;
-    }
-
-    private static List<SectionVm> OpenRouter(OpenRouterSnapshot s)
-    {
-        var v = new List<SectionVm> { new TitleSectionVm { Left = s.Label } };
-        var pct = Math.Clamp(s.ConsumedPct(), 0, 100);
-        v.Add(new MetricSectionVm
+        var quotas = groupByVariant ? s.GroupedByVariant() : s.Quotas;
+        if (quotas.Count == 0)
         {
-            Label = "Credit balance",
-            Pct = pct,
-            Severity = SeverityRules.SeverityFor(pct),
-            ValueLabel = Money(s.Balance()),
-            Footnote = $"{Money(s.TotalUsage)} of {Money(s.TotalCredits)} used ({pct}%)",
-        });
-        v.Add(new BlockSectionVm
+            v.Add(new TextSectionVm { Value = "no model usage reported" });
+            return v;
+        }
+        foreach (var q in quotas)
         {
-            Label = "Usage by period",
-            Body = [$"today {Money(s.UsageDaily)} · week {Money(s.UsageWeekly)} · month {Money(s.UsageMonthly)}"],
-        });
-        if (s.Limit is { } limit && s.LimitRemaining is { } rem)
-            v.Add(new BlockSectionVm { Label = "Per-key limit", Body = [$"{Money(rem)} of {Money(limit)} remaining"] });
-        v.Add(new BlockSectionVm { Label = "Tier", Body = [s.IsFreeTier ? "free tier" : "paid tier"] });
+            var pct = Math.Clamp(q.UtilizationPct, 0, 100);
+            var footnote = q.ResetsAt is { } r ? $"Resets in {Countdown.Format(r, now)}" : "";
+            if (q.Remaining is { } rem) footnote = footnote.Length > 0
+                ? $"{footnote} · {Num(rem)} left"
+                : $"{Num(rem)} left";
+            v.Add(new MetricSectionVm
+            {
+                Label = q.Model,
+                Pct = pct,
+                Severity = SeverityRules.SeverityFor(pct),
+                ValueLabel = $"{pct}%",
+                Footnote = footnote,
+            });
+        }
         return v;
     }
 
@@ -261,9 +312,6 @@ public static class SectionBuilder
             Footnote = footnote,
         });
     }
-
-    private static string Money(double v) =>
-        "$" + v.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>Compact number (drops trailing zeros) for Copilot quota counts.</summary>
     private static string Num(double v) =>

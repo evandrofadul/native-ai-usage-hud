@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="src/AiUsageBar.AvaloniaApp/MainWindow.axaml" value="src/AiUsageBar.AvaloniaApp/AiUsageBar.AvaloniaApp.csproj" />
+        <entry key="src/AiUsageBar.AvaloniaApp/Themes/Controls.axaml" value="src/AiUsageBar.AvaloniaApp/AiUsageBar.AvaloniaApp.csproj" />
       </map>
     </option>
   </component>

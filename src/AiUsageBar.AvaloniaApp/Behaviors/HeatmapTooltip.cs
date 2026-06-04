@@ -8,21 +8,26 @@ using Avalonia.VisualTree;
 namespace AiUsageBar.AvaloniaApp.Behaviors;
 
 /// <summary>
-/// Drives a single, shared card as the heatmap's tooltip: it shows instantly, follows
-/// the cursor, and swaps its text as the pointer crosses from one day cell to the next —
-/// instead of the per-cell <c>ToolTip.Tip</c> (which has a delay and flickers on every
-/// cell boundary). Port of the WPF <c>HeatmapTooltip</c> behavior, using a Canvas-hosted
-/// card instead of a Popup.
+/// Drives a single, shared <see cref="Popup"/> as the heatmap's tooltip: it shows
+/// instantly, follows the cursor, and swaps its text as the pointer crosses from one
+/// day cell to the next — instead of the per-cell <c>ToolTip.Tip</c> (which has a delay
+/// and flickers on every cell boundary).
+///
+/// The card lives in a <see cref="Popup"/> rather than the window's overlay layer so it
+/// can render <em>outside</em> the (small, borderless) window — the OS hosts the popup as
+/// its own top-level, clamped to the screen instead of the window, so the card is no
+/// longer clipped by the window edge.
 ///
 /// Wire it on the heatmap's ItemsControl:
 ///   <code>behaviors:HeatmapTooltip.IsEnabled="True"
 ///         behaviors:HeatmapTooltip.Card="{Binding #HeatTip}"</code>
-/// where <c>HeatTip</c> is a Border (child = TextBlock) sitting in a Canvas overlay.
+/// where <c>HeatTip</c> is a Popup whose child is a Border (child = TextBlock).
 /// </summary>
 public static class HeatmapTooltip
 {
-    // Gap between the card's bottom edge and the cursor (it sits centered above).
-    private const double Gap = 6;
+    // Distance the card floats above the cursor. Also a buffer so the popup never sits
+    // under the pointer (which would steal the hover and make it flicker).
+    private const double Gap = 5;
 
     public static readonly AttachedProperty<bool> IsEnabledProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("IsEnabled", typeof(HeatmapTooltip));
@@ -30,12 +35,12 @@ public static class HeatmapTooltip
     public static void SetIsEnabled(Control o, bool value) => o.SetValue(IsEnabledProperty, value);
     public static bool GetIsEnabled(Control o) => o.GetValue(IsEnabledProperty);
 
-    /// <summary>The card (a Border whose child is a TextBlock) this behavior positions and fills.</summary>
-    public static readonly AttachedProperty<Border?> CardProperty =
-        AvaloniaProperty.RegisterAttached<Control, Border?>("Card", typeof(HeatmapTooltip));
+    /// <summary>The popup (whose child is a Border → TextBlock) this behavior positions and fills.</summary>
+    public static readonly AttachedProperty<Popup?> CardProperty =
+        AvaloniaProperty.RegisterAttached<Control, Popup?>("Card", typeof(HeatmapTooltip));
 
-    public static void SetCard(Control o, Border? value) => o.SetValue(CardProperty, value);
-    public static Border? GetCard(Control o) => o.GetValue(CardProperty);
+    public static void SetCard(Control o, Popup? value) => o.SetValue(CardProperty, value);
+    public static Popup? GetCard(Control o) => o.GetValue(CardProperty);
 
     static HeatmapTooltip()
     {
@@ -59,36 +64,26 @@ public static class HeatmapTooltip
     private static void OnPointerMoved(object? sender, PointerEventArgs e)
     {
         var owner = (Control)sender!;
-        if (GetCard(owner) is not { } card) return;
+        if (GetCard(owner) is not { } popup) return;
 
         // Refresh the text only when over an actual day cell; in the gaps between cells
         // keep the last text so it doesn't flicker as the pointer crosses.
-        if (FindCell(e.Source as Visual, owner) is not { } cell) return;
+        if (FindCell(e.Source as Visual, owner) is { } cell
+            && popup.Child is Border { Child: TextBlock text })
+            text.Text = cell.Tooltip;
 
-        if (card.Child is TextBlock text) text.Text = cell.Tooltip;
-
-        // Host the card in the window's overlay layer so it floats above all content. Its
-        // original parent is a Canvas nested inside the tab's ScrollViewer, which clips it;
-        // the overlay layer sits on top of everything in the window and isn't clipped. Move
-        // it once, on first use (the owner is attached to the tree by the time we get here).
-        var overlay = OverlayLayer.GetOverlayLayer(owner);
-        if (overlay is null) return;
-        if (!ReferenceEquals(card.Parent, overlay))
-        {
-            (card.Parent as Panel)?.Children.Remove(card);
-            overlay.Children.Add(card);
-        }
-
-        // Position centered above the cursor, in the overlay layer's coordinate space.
-        var pos = owner.TranslatePoint(e.GetPosition(owner), overlay) ?? default;
-        Canvas.SetLeft(card, pos.X - card.Bounds.Width / 2);
-        Canvas.SetTop(card, pos.Y - Gap - card.Bounds.Height);
-        card.Opacity = 1;
+        // Place the card centered above the cursor. PlacementRect is in the target's
+        // coordinate space; lifting the anchor up by Gap keeps the popup clear of the
+        // pointer. Setting these while open repositions the existing popup (no flicker).
+        var pos = e.GetPosition(owner);
+        popup.PlacementTarget = owner;
+        popup.PlacementRect = new Rect(pos.X, pos.Y - Gap, 1, 1);
+        if (!popup.IsOpen) popup.IsOpen = true;
     }
 
     private static void OnPointerExited(object? sender, PointerEventArgs e)
     {
-        if (GetCard((Control)sender!) is { } card) card.Opacity = 0;
+        if (GetCard((Control)sender!) is { } popup) popup.IsOpen = false;
     }
 
     /// <summary>Walk up from the hit element to the day cell (its DataContext) under the cursor.</summary>

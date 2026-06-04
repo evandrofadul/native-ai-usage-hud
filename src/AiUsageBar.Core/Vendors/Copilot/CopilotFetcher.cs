@@ -7,8 +7,7 @@ namespace AiUsageBar.Core.Vendors.Copilot;
 
 /// <summary>
 /// Resolve the GitHub OAuth token → GET <c>copilot_internal/user</c> → read the plan +
-/// quota snapshots → cache, falling back to the on-disk cache on failure. Same shape as
-/// the other simple-GET fetchers (OpenRouter / Z.AI).
+/// quota snapshots → cache, falling back to the on-disk cache on failure.
 /// </summary>
 public sealed class CopilotFetcher : IVendorFetcher
 {

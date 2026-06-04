@@ -1,5 +1,4 @@
 using AiUsageBar.Core.Pacing;
-using Xunit;
 
 namespace AiUsageBar.Core.Tests;
 

@@ -32,4 +32,7 @@ public static class AppPaths
 
     public static string OpenAiCredentials =>
         Path.Combine(UserProfile, ".codex", "auth.json");
+
+    public static string GeminiCredentials =>
+        Path.Combine(UserProfile, ".gemini", "oauth_creds.json");
 }

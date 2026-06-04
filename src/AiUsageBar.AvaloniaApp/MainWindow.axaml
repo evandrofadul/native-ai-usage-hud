@@ -3,13 +3,12 @@
         xmlns:vm="clr-namespace:AiUsageBar.Presentation.ViewModels;assembly=AiUsageBar.Presentation"
         xmlns:controls="clr-namespace:AiUsageBar.AvaloniaApp.Controls"
         xmlns:behaviors="clr-namespace:AiUsageBar.AvaloniaApp.Behaviors"
-        xmlns:icons="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
         xmlns:sys="using:System"
         x:Class="AiUsageBar.AvaloniaApp.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="AI Usage Bar"
+        Title="AI Usage HUD"
         MinWidth="350" Width="450"
-        MinHeight="100" Height="675"
+        MinHeight="90" Height="675"
         CanResize="True"
         SystemDecorations="None"
         TransparencyLevelHint="Transparent"
@@ -167,34 +166,43 @@
                         </Border>
                     </UniformGrid>
 
-                    <!-- Activity heatmap: 7 rows, filled left to right. A single shared
-                         card (HeatTip) follows the cursor as the tooltip, driven by the
-                         HeatmapTooltip behavior. -->
-                    <Grid HorizontalAlignment="Center" Margin="2">
-                        <ItemsControl Name="HeatGrid" ItemsSource="{Binding Heatmap}"
-                                      Background="Transparent"
-                                      behaviors:HeatmapTooltip.IsEnabled="True"
-                                      behaviors:HeatmapTooltip.Card="{Binding #HeatTip}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Vertical" MaxHeight="120"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:HeatCell">
-                                    <Border Classes="heat"
-                                            Classes.lvl1="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=1}"
-                                            Classes.lvl2="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=2}"
-                                            Classes.lvl3="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=3}"
-                                            Classes.lvl4="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=4}"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Canvas IsHitTestVisible="False">
-                            <Border Name="HeatTip" Classes="heatTip" Opacity="0" IsHitTestVisible="False">
+                    <!-- Activity heatmap: 7 rows, oldest→newest left to right. Hosted in a
+                         horizontally-scrollable viewer pinned to its right edge (ScrollPinEnd),
+                         so when the card gets too narrow the oldest (left) columns scroll out of
+                         view first and the most recent days stay visible. A single shared card
+                         (HeatTip) follows the cursor as the tooltip. -->
+                    <Grid Margin="2">
+                        <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                                      behaviors:ScrollPinEnd.IsEnabled="True">
+                            <ItemsControl Name="HeatGrid" HorizontalAlignment="Center" ItemsSource="{Binding Heatmap}"
+                                          Background="Transparent"
+                                          behaviors:HeatmapTooltip.IsEnabled="True"
+                                          behaviors:HeatmapTooltip.Card="{Binding #HeatTip}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Vertical" MaxHeight="120"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:HeatCell">
+                                        <Border Classes="heat"
+                                                Classes.lvl1="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=1}"
+                                                Classes.lvl2="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=2}"
+                                                Classes.lvl3="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=3}"
+                                                Classes.lvl4="{Binding Level, Converter={StaticResource Eq}, ConverterParameter=4}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <!-- Tooltip card hosted in a Popup so it can render outside the
+                             (small, borderless) window instead of being clipped by it. -->
+                        <Popup Name="HeatTip" Placement="AnchorAndGravity"
+                               PlacementAnchor="Top" PlacementGravity="Top"
+                               IsLightDismissEnabled="False" WindowManagerAddShadowHint="False">
+                            <Border Classes="heatTip" IsHitTestVisible="False">
                                 <TextBlock FontSize="11" Foreground="{DynamicResource FgBrush}"/>
                             </Border>
-                        </Canvas>
+                        </Popup>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -211,37 +219,38 @@
                 <Grid Grid.Row="0" Margin="-12,-12,-12,0" Background="Transparent"
                       Name="HeaderBar" PointerPressed="OnHeaderPressed">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12">
-                        <Border Width="28" Height="26" CornerRadius="4"
+                        <Border Width="24" Height="22" CornerRadius="4"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
                             <TextBlock Text="ai" FontSize="15" FontWeight="Bold"
                                        Foreground="{DynamicResource BgBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="AI Usage" FontSize="16" FontWeight="SemiBold" Margin="8,0,0,0"
+                        <TextBlock Text="Usage HUD" FontSize="16" FontWeight="SemiBold" Margin="8,0,0,0"
                                    VerticalAlignment="Center" Foreground="{DynamicResource FgBrush}"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <StackPanel Name="WindowControls" Orientation="Horizontal"
+                                HorizontalAlignment="Right" VerticalAlignment="Top">
                         <Button Command="{Binding OpenSettingsCommand}"
-                                Theme="{StaticResource WindowControlButton}" Width="45" Height="32"
+                                Theme="{StaticResource WindowControlButton}"
                                 ToolTip.Tip="Settings">
-                            <icons:SymbolIcon Symbol="Settings" IconVariant="Regular" FontSize="14"
-                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                            <PathIcon Data="{StaticResource IconSettings}" Width="16" Height="16"
+                                      Foreground="{Binding $parent[Button].Foreground}"/>
                         </Button>
                         <ToggleButton Name="PinButton" Theme="{StaticResource WindowToggleButton}"
-                                      IsCheckedChanged="OnPinChanged" Width="45" Height="32"
+                                      IsCheckedChanged="OnPinChanged"
                                       ToolTip.Tip="Keep on top (can't be minimized while pinned)">
-                            <icons:SymbolIcon Symbol="Pin" IconVariant="Regular" FontSize="14"
-                                              Foreground="{Binding $parent[ToggleButton].Foreground}"/>
+                            <PathIcon Data="{StaticResource IconPin}" Width="14" Height="14"
+                                      Foreground="{Binding $parent[ToggleButton].Foreground}"/>
                         </ToggleButton>
                         <Button Name="MinimizeButton" Theme="{StaticResource WindowControlButton}"
-                                Click="OnMinimizeClick" Width="45" Height="32" ToolTip.Tip="Minimize">
-                            <icons:SymbolIcon Symbol="Subtract" IconVariant="Regular" FontSize="15"
-                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                                Click="OnMinimizeClick" ToolTip.Tip="Minimize">
+                            <PathIcon Data="{StaticResource IconSubtract}" Width="12" Height="12"
+                                      Foreground="{Binding $parent[Button].Foreground}"/>
                         </Button>
-                        <Button Theme="{StaticResource WindowCloseButton}" Click="OnCloseClick"
-                                Width="45" Height="32" ToolTip.Tip="Close to tray">
-                            <icons:SymbolIcon Symbol="Dismiss" IconVariant="Regular" FontSize="14"
-                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                        <Button Name="CloseButton" Theme="{StaticResource WindowCloseButton}" Click="OnCloseClick"
+                                ToolTip.Tip="Close to tray">
+                            <PathIcon Data="{StaticResource IconDismiss}" Width="11" Height="11"
+                                      Foreground="{Binding $parent[Button].Foreground}"/>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -270,9 +279,9 @@
                     <Button Command="{Binding RefreshActiveCommand}" Margin="0,0,6,0"
                             HorizontalAlignment="Stretch">
                         <StackPanel Orientation="Horizontal">
-                            <icons:SymbolIcon Symbol="ArrowSync" IconVariant="Regular" FontSize="14"
-                                              VerticalAlignment="Center"
-                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                            <PathIcon Data="{StaticResource IconArrowSync}" Width="16" Height="16"
+                                      VerticalAlignment="Center"
+                                      Foreground="{Binding $parent[Button].Foreground}"/>
                             <TextBlock Text="Refresh" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

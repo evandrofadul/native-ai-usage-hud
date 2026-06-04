@@ -27,7 +27,14 @@ public partial class MainWindow : Window
         // dropped and the pin does nothing. Hide the button on Linux rather than offer a
         // control that can't work; Windows/GNOME/KDE keep it.
         if (OperatingSystem.IsLinux())
+        {
             PinButton.IsVisible = false;
+
+            // Swap the square Windows caption buttons for flat circular GNOME/libadwaita
+            // ones so the close/minimize controls follow the Linux desktop convention.
+            foreach (var btn in WindowControls.Children.OfType<Button>())
+                btn.Classes.Add("gnome");
+        }
 
         Opacity = OpacityManager.WindowOpacity;
         OpacityManager.Changed += OnOpacityChanged;

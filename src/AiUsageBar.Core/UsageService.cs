@@ -4,9 +4,8 @@ using AiUsageBar.Core.Config;
 using AiUsageBar.Core.Models;
 using AiUsageBar.Core.Vendors.Anthropic;
 using AiUsageBar.Core.Vendors.Copilot;
+using AiUsageBar.Core.Vendors.Gemini;
 using AiUsageBar.Core.Vendors.OpenAi;
-using AiUsageBar.Core.Vendors.OpenRouter;
-using AiUsageBar.Core.Vendors.Zai;
 
 namespace AiUsageBar.Core;
 
@@ -68,18 +67,12 @@ public sealed class UsageService
             Cache.ForVendor("copilot"),
             Cache.DefaultTtl),
 
-        VendorId.Zai => new ZaiFetcher(
+        VendorId.Gemini => new GeminiFetcher(
             _client,
-            ApiKeyResolver.Resolve("Zai", _config.Zai.ApiKeyEnv, _config.Zai.ApiKey),
-            Cache.ForVendor("zai"),
+            _config.Gemini.CredentialsPath ?? AppPaths.GeminiCredentials,
+            Cache.ForVendor("gemini"),
             Cache.DefaultTtl,
-            _config.Zai.PlanTier),
-
-        VendorId.Openrouter => new OpenRouterFetcher(
-            _client,
-            ApiKeyResolver.Resolve("OpenRouter", _config.Openrouter.ApiKeyEnv, _config.Openrouter.ApiKey),
-            Cache.ForVendor("openrouter"),
-            Cache.DefaultTtl),
+            _config.Gemini.ProjectId),
 
         _ => throw new ArgumentOutOfRangeException(nameof(vendor)),
     };

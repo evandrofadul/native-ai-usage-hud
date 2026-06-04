@@ -1,12 +1,12 @@
 # ai-usagebar-wpf
 
 Cross-platform (Avalonia) port of `ai-usagebar` — monitors AI plan usage for
-**Anthropic Claude**, **OpenAI Codex/ChatGPT**, **GitHub Copilot**, **Z.AI (GLM)**
-and **OpenRouter** from the system tray. Runs on **Windows** and **Linux**.
+**Anthropic Claude**, **OpenAI Codex/ChatGPT**, **GitHub Copilot** and
+**Gemini CLI** from the system tray. Runs on **Windows** and **Linux**.
 
 It reuses the credentials the official CLIs already wrote to disk (`claude`,
-`codex`, `copilot`/`gh`) and the same undocumented usage endpoints, so there is
-no separate login.
+`codex`, `copilot`/`gh`, `gemini`) and the same undocumented usage endpoints, so
+there is no separate login.
 
 ## Form factor
 
@@ -32,12 +32,12 @@ src/
 ```
 
 `AiUsageBar.Core` mirrors the Rust crate module-for-module: `Models`, `Pacing`
-(pacing/countdown/severity), `Config` (+ `AppPaths`, `ApiKeyResolver`,
-`ConfigWriter`), `Caching` (atomic write + TTL + lock + last-error), and one
-folder per vendor (`Vendors/Anthropic`, `OpenAi`, `Copilot`, `Zai`,
-`OpenRouter`) with `Types` / `Creds` / `OAuth` / `Fetcher`. `UsageService` is
-the orchestrator. `Core/Theming/PaletteColors.cs` is the single source of truth
-for the 42 theme palettes.
+(pacing/countdown/severity), `Config` (+ `AppPaths`, `ConfigWriter`), `Caching`
+(atomic write + TTL + lock + last-error), and one folder per vendor
+(`Vendors/Anthropic`, `OpenAi`, `Copilot`, `Gemini`) with `Types` / `Creds` /
+`OAuth` / `Fetcher`. `UsageService` is the orchestrator.
+`Core/Theming/PaletteColors.cs` is the single source of truth for the 58 theme
+palettes.
 
 `AiUsageBar.Presentation` holds every view model (`MainViewModel`,
 `VendorTabViewModel`, `SettingsViewModel`, the section/dashboard VMs,
@@ -56,11 +56,13 @@ included only as structural plumbing for controls that aren't drawn directly
 
 ### Theme palettes (single source of truth)
 
-The 42 palettes live in `tools/palettes.json`. Run the generator to (re)emit the
-C# table and the per-framework dictionaries — never hand-edit the generated files:
+The 58 palettes live in `tools/palettes.json`. Run the generator to (re)emit the
+C# table — never hand-edit the generated files. The Avalonia head builds every
+palette at runtime from `PaletteColors.cs`, so it needs only `OneDark.axaml` (the
+compile-time default in `App.axaml`), which the generator also emits:
 
 ```powershell
-pwsh tools/Generate-Palettes.ps1            # PaletteColors.cs + Avalonia *.axaml
+pwsh tools/Generate-Palettes.ps1            # PaletteColors.cs + Avalonia OneDark.axaml
 ```
 
 ## Paths
@@ -72,15 +74,16 @@ pwsh tools/Generate-Palettes.ps1            # PaletteColors.cs + Avalonia *.axam
 | Anthropic creds    | `%USERPROFILE%\.claude\.credentials.json`     | `~/.claude/.credentials.json`          |
 | OpenAI creds       | `%USERPROFILE%\.codex\auth.json`              | `~/.codex/auth.json`                   |
 | Copilot creds      | Windows Credential Manager (`copilot-cli` / `gh`) | `~/.config/gh/hosts.yml` (gh CLI)  |
+| Gemini creds       | `%USERPROFILE%\.gemini\oauth_creds.json`      | `~/.gemini/oauth_creds.json`           |
 
 ## Configuration
 
-Optional `config.toml` (defaults enable all five vendors). Same shape as the Rust
+Optional `config.toml` (defaults enable all vendors). Same shape as the Rust
 project:
 
 ```toml
 [ui]
-# primary = "anthropic"   # anthropic | openai | copilot | zai | openrouter
+# primary = "anthropic"   # anthropic | openai | copilot | gemini
 
 [anthropic]
 enabled = true
@@ -93,19 +96,17 @@ enabled = true
 # oauth_token = "gho_..."   # explicit override; otherwise read from the OS (Credential
 #                           # Manager on Windows, gh hosts.yml on Linux)
 
-[zai]
+[gemini]
 enabled = true
-api_key_env = "ZAI_API_KEY"   # env wins; inline api_key is the fallback
-# api_key = "..."
-
-[openrouter]
-enabled = true
-api_key_env = "OPENROUTER_API_KEY"
-# api_key = "sk-or-v1-..."
+# credentials_path = "..."  # override ~/.gemini/oauth_creds.json
+# project_id = "..."        # Code Assist project; otherwise resolved via loadCodeAssist
+group_by_variant = true     # collapse models into variants (Flash/Pro…), each showing its
+#                           # highest usage; false lists every model
 ```
 
-The in-app **Settings** dialog edits `[ui].primary` and the Z.AI / OpenRouter
-inline keys, preserving the file's comments and unrelated fields.
+The in-app **Settings** dialog edits `[ui]` (primary, theme, opacity, launch-at-login),
+preserving the file's comments and unrelated fields. `[gemini].group_by_variant` is
+file-only for now.
 
 ## Build & run
 

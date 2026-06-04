@@ -1,5 +1,4 @@
 using AiUsageBar.Core.TokenTracking;
-using Xunit;
 
 namespace AiUsageBar.Core.Tests;
 

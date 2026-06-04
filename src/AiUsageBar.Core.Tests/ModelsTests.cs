@@ -1,6 +1,5 @@
 using AiUsageBar.Core.Models;
 using AiUsageBar.Core.Pacing;
-using Xunit;
 
 namespace AiUsageBar.Core.Tests;
 
@@ -51,19 +50,4 @@ public class ModelsTests
     [Fact]
     public void SeverityPromotesExtraWhenSessionAt100() =>
         Assert.Equal(PaceSeverity.Critical, Snap(100, 50, null, (10000, 9500)).Severity());
-
-    [Fact]
-    public void OpenRouterConsumedPctAndBalance()
-    {
-        var s = new OpenRouterSnapshot("x", 100.0, 30.0, 1, 5, 30, false, 50, 20);
-        Assert.Equal(70.0, s.Balance(), 9);
-        Assert.Equal(30, s.ConsumedPct());
-    }
-
-    [Fact]
-    public void OpenRouterConsumedPctHandlesZeroCredits()
-    {
-        var s = new OpenRouterSnapshot("x", 0.0, 5.0, 0, 0, 0, true, null, null);
-        Assert.Equal(0, s.ConsumedPct());
-    }
 }

@@ -107,8 +107,8 @@
                  Window controls — compact square icon buttons
                  ============================================================ -->
             <ControlTheme x:Key="WindowControlButton" TargetType="Button">
-                <Setter Property="Width" Value="30"/>
-                <Setter Property="Height" Value="26"/>
+                <Setter Property="Width" Value="45"/>
+                <Setter Property="Height" Value="32"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="{DynamicResource DimBrush}"/>
                 <Setter Property="BorderThickness" Value="0"/>
@@ -134,8 +134,8 @@
 
             <!-- Toggle variant of the window control button: accent foreground when checked. -->
             <ControlTheme x:Key="WindowToggleButton" TargetType="ToggleButton">
-                <Setter Property="Width" Value="30"/>
-                <Setter Property="Height" Value="26"/>
+                <Setter Property="Width" Value="45"/>
+                <Setter Property="Height" Value="32"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="{DynamicResource DimBrush}"/>
                 <Setter Property="BorderThickness" Value="0"/>
@@ -161,8 +161,8 @@
 
             <!-- Same shape, but the close button turns red on hover. -->
             <ControlTheme x:Key="WindowCloseButton" TargetType="Button">
-                <Setter Property="Width" Value="30"/>
-                <Setter Property="Height" Value="26"/>
+                <Setter Property="Width" Value="45"/>
+                <Setter Property="Height" Value="32"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="{DynamicResource DimBrush}"/>
                 <Setter Property="BorderThickness" Value="0"/>
@@ -222,7 +222,7 @@
                 <Setter Property="Height" Value="22"/>
                 <Setter Property="Template">
                     <ControlTemplate>
-                        <Border Name="Track" CornerRadius="11" BorderThickness="1" BorderBrush="Transparent"
+                        <Border Name="Track" CornerRadius="11" BorderThickness="0" BorderBrush="Transparent"
                                 Background="{DynamicResource Bg3Brush}">
                             <Ellipse Name="Knob" Width="14" Height="14"
                                      HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -239,9 +239,6 @@
                         </Border>
                     </ControlTemplate>
                 </Setter>
-                <Style Selector="^:pointerover /template/ Border#Track">
-                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                </Style>
                 <Style Selector="^:checked /template/ Border#Track">
                     <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
@@ -276,6 +273,9 @@
                 <Setter Property="Width" Value="16"/>
                 <Setter Property="Height" Value="16"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <!-- Drop the default focus rectangle: it draws a square box around the
+                     round thumb on hover/focus. The halo ellipse below is our affordance. -->
+                <Setter Property="FocusAdorner" Value="{x:Null}"/>
                 <Setter Property="Template">
                     <ControlTemplate>
                         <Grid Width="16" Height="16">
@@ -286,15 +286,16 @@
                     </ControlTemplate>
                 </Setter>
                 <Style Selector="^:pointerover /template/ Ellipse#Halo">
-                    <Setter Property="Opacity" Value="0.18"/>
+                    <Setter Property="Opacity" Value="0"/>
                 </Style>
                 <Style Selector="^:pressed /template/ Ellipse#Halo">
-                    <Setter Property="Opacity" Value="0.28"/>
+                    <Setter Property="Opacity" Value="0"/>
                 </Style>
             </ControlTheme>
 
             <ControlTheme x:Key="ThemedSlider" TargetType="Slider">
                 <Setter Property="MinHeight" Value="24"/>
+                <Setter Property="FocusAdorner" Value="{x:Null}"/>
                 <Setter Property="IsSnapToTickEnabled" Value="True"/>
                 <Setter Property="TickFrequency" Value="1"/>
                 <Setter Property="SmallChange" Value="1"/>
@@ -361,7 +362,7 @@
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Template">
                     <ControlTemplate>
-                        <Border Name="Bd" CornerRadius="6" Margin="0,0,4,0" Padding="14,7,14,17"
+                        <Border Name="Bd" CornerRadius="8,8,0,0" Margin="0,0,4,0" Padding="14,7,14,7"
                                 Background="Transparent">
                             <ContentPresenter Content="{TemplateBinding Header}"
                                               ContentTemplate="{TemplateBinding HeaderTemplate}"
@@ -390,9 +391,9 @@
                     <ControlTemplate>
                         <Grid RowDefinitions="Auto,*">
                             <ItemsPresenter Name="PART_ItemsPresenter" Grid.Row="0"
-                                            Margin="0,0,0,-10"
+                                            Margin="15,0,0,0"
                                             ItemsPanel="{TemplateBinding ItemsPanel}"/>
-                            <Border Grid.Row="1" Background="{DynamicResource Bg2Brush}" CornerRadius="6">
+                            <Border Grid.Row="1" Background="{DynamicResource Bg2Brush}" CornerRadius="8">
                                 <ContentPresenter Name="PART_SelectedContentHost"
                                                   Content="{TemplateBinding SelectedContent}"
                                                   ContentTemplate="{TemplateBinding SelectedContentTemplate}"/>
@@ -585,6 +586,31 @@
     <!-- ============================================================
          Data-driven class styles (stand in for WPF DataTriggers)
          ============================================================ -->
+
+    <!-- Linux window controls: flat circular buttons in the GNOME/libadwaita
+         style (transparent at rest, circular hover fill, no red close). Applied
+         via the "gnome" class added to each header button in MainWindow's
+         code-behind on Linux; Windows keeps the square caption-button look. -->
+    <Style Selector="Button.gnome, ToggleButton.gnome">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Margin" Value="0,8,10,0"/>
+    </Style>
+    <Style Selector="Button.gnome /template/ Border#Bd, ToggleButton.gnome /template/ Border#Bd">
+        <Setter Property="CornerRadius" Value="15"/>
+        <Setter Property="Background" Value="{DynamicResource Bg3Brush}"/>
+    </Style>
+    <Style Selector="Button.gnome:pointerover /template/ Border#Bd, ToggleButton.gnome:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+    </Style>
+    <Style Selector="Button.gnome:pressed /template/ Border#Bd, ToggleButton.gnome:pressed /template/ Border#Bd">
+        <Setter Property="Background" Value="{DynamicResource Bg2Brush}"/>
+    </Style>
+    <!-- PathIcon glyphs snap to the pixel grid so the 16px Fluent geometry renders crisp
+         (no sub-pixel blur) at icon sizes. -->
+    <Style Selector="PathIcon">
+        <Setter Property="UseLayoutRounding" Value="True"/>
+    </Style>
 
     <!-- Severity value text: color tracks the metric's severity. -->
     <Style Selector="TextBlock.sevValue">

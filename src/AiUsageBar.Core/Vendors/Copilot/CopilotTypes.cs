@@ -87,7 +87,7 @@ public sealed class CopilotQuotaSnapshot
 /// <summary>
 /// Cache representation for Copilot. The session token in the live response is
 /// short-lived and sensitive, so we persist only the derived snapshot (never the raw
-/// exchange body) — same approach as OpenRouter.
+/// exchange body).
 /// </summary>
 public sealed class CopilotCacheDto
 {

@@ -9,32 +9,19 @@ public enum VendorId
     Anthropic,
     Openai,
     Copilot,
-    Zai,
-    Openrouter,
+    Gemini,
 }
 
 public static class VendorIdExtensions
 {
-    /// <summary>Lowercase slug used in config (anthropic/openai/zai/openrouter).</summary>
+    /// <summary>Lowercase slug used in config (anthropic/openai/copilot/gemini).</summary>
     public static string Slug(this VendorId id) => id switch
     {
         VendorId.Anthropic => "anthropic",
         VendorId.Openai => "openai",
         VendorId.Copilot => "copilot",
-        VendorId.Zai => "zai",
-        VendorId.Openrouter => "openrouter",
+        VendorId.Gemini => "gemini",
         _ => "anthropic",
-    };
-
-    /// <summary>3-letter short id shown on the tray (cld/gpt/cop/zai/opr).</summary>
-    public static string ShortId(this VendorId id) => id switch
-    {
-        VendorId.Anthropic => "cld",
-        VendorId.Openai => "gpt",
-        VendorId.Copilot => "cop",
-        VendorId.Zai => "zai",
-        VendorId.Openrouter => "opr",
-        _ => "cld",
     };
 
     /// <summary>Human label for the UI.</summary>
@@ -43,21 +30,17 @@ public static class VendorIdExtensions
         VendorId.Anthropic => "Anthropic",
         VendorId.Openai => "OpenAI",
         VendorId.Copilot => "Copilot",
-        VendorId.Zai => "Z.AI",
-        VendorId.Openrouter => "OpenRouter",
+        VendorId.Gemini => "Gemini",
         _ => "Anthropic",
     };
 
-    /// <summary>
-    /// Vendors shown in the UI, in canonical order. Z.AI and OpenRouter remain in
-    /// the enum (and have working fetchers) but are intentionally excluded here so
-    /// they no longer appear on the tabs or in Settings.
-    /// </summary>
+    /// <summary>Vendors shown in the UI, in canonical order.</summary>
     public static IReadOnlyList<VendorId> All { get; } = new[]
     {
         VendorId.Anthropic,
         VendorId.Openai,
         VendorId.Copilot,
+        VendorId.Gemini,
     };
 
     /// <summary>Parse a slug back to a <see cref="VendorId"/>; null if unknown.</summary>
@@ -66,8 +49,7 @@ public static class VendorIdExtensions
         "anthropic" => VendorId.Anthropic,
         "openai" => VendorId.Openai,
         "copilot" => VendorId.Copilot,
-        "zai" => VendorId.Zai,
-        "openrouter" => VendorId.Openrouter,
+        "gemini" => VendorId.Gemini,
         _ => null,
     };
 }

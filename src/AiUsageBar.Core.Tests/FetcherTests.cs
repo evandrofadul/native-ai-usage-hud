@@ -5,9 +5,7 @@ using AiUsageBar.Core.Errors;
 using AiUsageBar.Core.Tests.Support;
 using AiUsageBar.Core.Vendors.Anthropic;
 using AiUsageBar.Core.Vendors.Copilot;
-using AiUsageBar.Core.Vendors.OpenRouter;
-using AiUsageBar.Core.Vendors.Zai;
-using Xunit;
+using AiUsageBar.Core.Vendors.Gemini;
 
 namespace AiUsageBar.Core.Tests;
 
@@ -32,6 +30,17 @@ public class FetcherTests : IDisposable
             "{\"claudeAiOauth\":{\"accessToken\":\"AT\",\"refreshToken\":\"RT\",\"expiresAt\":" +
             expiresMs +
             ",\"subscriptionType\":\"max\",\"rateLimitTier\":\"default_claude_max_5x\"}}");
+        return path;
+    }
+
+    private string WriteGeminiCreds()
+    {
+        // Expires 1h in the future → no refresh needed.
+        var expiresMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 3_600_000;
+        var path = Path.Combine(_root, "gemini_oauth.json");
+        Directory.CreateDirectory(_root);
+        File.WriteAllText(path,
+            "{\"access_token\":\"AT\",\"refresh_token\":\"RT\",\"expiry_date\":" + expiresMs + "}");
         return path;
     }
 
@@ -99,57 +108,6 @@ public class FetcherTests : IDisposable
     }
 
     [Fact]
-    public async Task ZaiLiveFetchAndStaleFallback()
-    {
-        var cache = NewCache("zai");
-        var handler = new FakeHttpHandler().On("/quota/limit", HttpStatusCode.OK,
-            """{"code":200,"data":{"limits":[{"type":"TOKENS_LIMIT","percentage":10}],"level":"pro"},"success":true}""");
-        var fetcher = new ZaiFetcher(handler.Client(), "KEY", cache, TimeSpan.Zero, null,
-            "https://fake.local/api/monitor/usage/quota/limit");
-        var outcome = await fetcher.FetchAsync();
-        var snap = (Core.Models.ZaiSnapshot)outcome.Snapshot;
-        Assert.Equal(10, snap.Session!.Value.UtilizationPct);
-        Assert.False(outcome.Stale);
-
-        // Now a 500 → falls back to the just-written cache, marked stale.
-        var bad = new FakeHttpHandler().On("/quota/limit", HttpStatusCode.InternalServerError, "boom");
-        var fetcher2 = new ZaiFetcher(bad.Client(), "KEY", cache, TimeSpan.Zero, null,
-            "https://fake.local/api/monitor/usage/quota/limit");
-        var outcome2 = await fetcher2.FetchAsync();
-        Assert.True(outcome2.Stale);
-        Assert.Equal(500, outcome2.LastError!.Value.Code);
-    }
-
-    [Fact]
-    public async Task ZaiSendsBareAuthorizationHeader()
-    {
-        var cache = NewCache("zai");
-        var handler = new FakeHttpHandler().On("/quota/limit", HttpStatusCode.OK,
-            """{"code":200,"data":{"limits":[],"level":"pro"},"success":true}""");
-        var fetcher = new ZaiFetcher(handler.Client(), "MYKEY", cache, TimeSpan.Zero, null,
-            "https://fake.local/api/monitor/usage/quota/limit");
-        await fetcher.FetchAsync();
-        var auth = handler.Requests[0].Headers.GetValues("Authorization").Single();
-        Assert.Equal("MYKEY", auth); // no "Bearer " prefix
-    }
-
-    [Fact]
-    public async Task OpenRouterCombinesAndCaches()
-    {
-        var cache = NewCache("openrouter");
-        var handler = new FakeHttpHandler()
-            .On("/credits", HttpStatusCode.OK, """{"data":{"total_credits":100.0,"total_usage":30.0}}""")
-            .On("/key", HttpStatusCode.OK, """{"data":{"label":"k","usage_daily":1,"usage_weekly":5,"usage_monthly":30,"is_free_tier":false}}""");
-        var fetcher = new OpenRouterFetcher(handler.Client(), "KEY", cache, TimeSpan.Zero,
-            "https://fake.local/api/v1/credits", "https://fake.local/api/v1/key");
-        var outcome = await fetcher.FetchAsync();
-        var snap = (Core.Models.OpenRouterSnapshot)outcome.Snapshot;
-        Assert.Equal(70.0, snap.Balance(), 9);
-        Assert.Equal("OpenRouter — k", snap.Label);
-        Assert.NotNull(cache.MaybePayload());
-    }
-
-    [Fact]
     public async Task CopilotLiveFetchAndStaleFallback()
     {
         var cache = NewCache("copilot");
@@ -189,13 +147,62 @@ public class FetcherTests : IDisposable
     }
 
     [Fact]
+    public async Task GeminiLiveFetchAndStaleFallback()
+    {
+        var cache = NewCache("gemini");
+        var handler = new FakeHttpHandler()
+            .On("/v1internal:loadCodeAssist", HttpStatusCode.OK,
+                """{"cloudaicompanionProject":"proj-123","currentTier":{"id":"free-tier","name":"Free"}}""")
+            .On("/v1internal:retrieveUserQuota", HttpStatusCode.OK,
+                """{"buckets":[{"modelId":"gemini-2.5-flash","remainingFraction":0.95,"resetTime":"2026-06-03T00:00:00Z"}]}""");
+        var fetcher = new GeminiFetcher(handler.Client(), WriteGeminiCreds(), cache, TimeSpan.Zero, null,
+            "https://fake.local");
+
+        var outcome = await fetcher.FetchAsync();
+        var snap = (Core.Models.GeminiSnapshot)outcome.Snapshot;
+        Assert.Equal("Gemini Free", snap.Plan);
+        Assert.Equal(5, snap.Quotas[0].UtilizationPct); // 1 - 0.95 → 5%
+        Assert.False(outcome.Stale);
+        // Bearer auth on both calls.
+        Assert.All(handler.Requests, r =>
+            Assert.Equal("Bearer AT", r.Headers.GetValues("Authorization").Single()));
+
+        // A 500 on the quota call → falls back to the cached snapshot, marked stale.
+        var bad = new FakeHttpHandler()
+            .On("/v1internal:loadCodeAssist", HttpStatusCode.OK, """{"currentTier":{"id":"free-tier"}}""")
+            .On("/v1internal:retrieveUserQuota", HttpStatusCode.InternalServerError, "boom");
+        var fetcher2 = new GeminiFetcher(bad.Client(), WriteGeminiCreds(), cache, TimeSpan.Zero, null,
+            "https://fake.local");
+        var outcome2 = await fetcher2.FetchAsync();
+        Assert.True(outcome2.Stale);
+        Assert.Equal(500, outcome2.LastError!.Value.Code);
+    }
+
+    [Fact]
+    public async Task GeminiFreshCacheSkipsNetwork()
+    {
+        var cache = NewCache("gemini");
+        cache.WritePayload(GeminiCacheDto.Serialize(new Core.Models.GeminiSnapshot("Gemini Free",
+            [new Core.Models.GeminiQuota("gemini-2.5-flash", 7, null, null)])));
+        var handler = new FakeHttpHandler(); // no routes → would 404 if called
+        var fetcher = new GeminiFetcher(handler.Client(), WriteGeminiCreds(), cache,
+            TimeSpan.FromSeconds(60), null, "https://fake.local");
+
+        var outcome = await fetcher.FetchAsync();
+        var snap = (Core.Models.GeminiSnapshot)outcome.Snapshot;
+        Assert.Equal(7, snap.Quotas[0].UtilizationPct);
+        Assert.False(outcome.Stale);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
     public async Task TransientErrorWithNoCacheThrows()
     {
-        var cache = NewCache("zai");
-        // Point at a real handler that throws a transport error by using a closed scheme.
+        var cache = NewCache("anthropic");
+        // A transport error with no cache to fall back on must surface as TransportException.
         var handler = new ThrowingHandler();
-        var fetcher = new ZaiFetcher(new HttpClient(handler), "KEY", cache, TimeSpan.Zero, null,
-            "https://fake.local/api/monitor/usage/quota/limit");
+        var fetcher = new AnthropicFetcher(new HttpClient(handler), WriteAnthropicCreds(), cache, TimeSpan.Zero,
+            "https://fake.local/api/oauth/usage", "https://fake.local/v1/oauth/token");
         await Assert.ThrowsAsync<TransportException>(() => fetcher.FetchAsync());
     }
 

@@ -17,6 +17,9 @@
                      runtime. The control styles reference the palette via DynamicResource,
                      so the UI recolors live when the palette is replaced. -->
                 <ResourceInclude Source="avares://AiUsageBar/Themes/Palettes/OneDark.axaml"/>
+                <!-- Index 1+: stable resources the palette swap must not disturb. Icon
+                     geometries replace the former FluentIcons.Avalonia SymbolIcon glyphs. -->
+                <ResourceInclude Source="avares://AiUsageBar/Themes/Icons.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

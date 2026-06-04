@@ -1,5 +1,4 @@
 using AiUsageBar.Core.Models;
-using Tomlyn;
 using Tomlyn.Model;
 
 namespace AiUsageBar.Core.Config;
@@ -15,16 +14,14 @@ public sealed class AppConfig
     public AnthropicConfig Anthropic { get; set; } = new();
     public OpenAiConfig Openai { get; set; } = new();
     public CopilotConfig Copilot { get; set; } = new();
-    public ZaiConfig Zai { get; set; } = new();
-    public OpenRouterConfig Openrouter { get; set; } = new();
+    public GeminiConfig Gemini { get; set; } = new();
 
     public bool IsEnabled(VendorId id) => id switch
     {
         VendorId.Anthropic => Anthropic.Enabled,
         VendorId.Openai => Openai.Enabled,
         VendorId.Copilot => Copilot.Enabled,
-        VendorId.Zai => Zai.Enabled,
-        VendorId.Openrouter => Openrouter.Enabled,
+        VendorId.Gemini => Gemini.Enabled,
         _ => false,
     };
 
@@ -77,19 +74,12 @@ public sealed class AppConfig
             cfg.Copilot.CredentialTarget = GetString(cT, "credential_target") ?? cfg.Copilot.CredentialTarget;
         }
 
-        if (Section(model, "zai") is { } zT)
+        if (Section(model, "gemini") is { } gT)
         {
-            cfg.Zai.Enabled = GetBool(zT, "enabled", true);
-            cfg.Zai.ApiKeyEnv = GetString(zT, "api_key_env") ?? cfg.Zai.ApiKeyEnv;
-            cfg.Zai.ApiKey = GetString(zT, "api_key");
-            cfg.Zai.PlanTier = GetString(zT, "plan_tier");
-        }
-
-        if (Section(model, "openrouter") is { } rT)
-        {
-            cfg.Openrouter.Enabled = GetBool(rT, "enabled", true);
-            cfg.Openrouter.ApiKeyEnv = GetString(rT, "api_key_env") ?? cfg.Openrouter.ApiKeyEnv;
-            cfg.Openrouter.ApiKey = GetString(rT, "api_key");
+            cfg.Gemini.Enabled = GetBool(gT, "enabled", true);
+            cfg.Gemini.CredentialsPath = GetString(gT, "credentials_path");
+            cfg.Gemini.ProjectId = GetString(gT, "project_id");
+            cfg.Gemini.GroupByVariant = GetBool(gT, "group_by_variant", true);
         }
 
         return cfg;
@@ -157,17 +147,23 @@ public sealed class CopilotConfig
     public string CredentialTarget { get; set; } = "copilot-cli/https://github.com:*";
 }
 
-public sealed class ZaiConfig
+public sealed class GeminiConfig
 {
     public bool Enabled { get; set; } = true;
-    public string ApiKeyEnv { get; set; } = "ZAI_API_KEY";
-    public string? ApiKey { get; set; }
-    public string? PlanTier { get; set; }
-}
 
-public sealed class OpenRouterConfig
-{
-    public bool Enabled { get; set; } = true;
-    public string ApiKeyEnv { get; set; } = "OPENROUTER_API_KEY";
-    public string? ApiKey { get; set; }
+    /// <summary>Override for <c>~/.gemini/oauth_creds.json</c>.</summary>
+    public string? CredentialsPath { get; set; }
+
+    /// <summary>
+    /// Optional Code Assist project id sent to <c>retrieveUserQuota</c>. Left null,
+    /// the fetcher resolves the managed project via <c>loadCodeAssist</c>.
+    /// </summary>
+    public string? ProjectId { get; set; }
+
+    /// <summary>
+    /// When true (default), collapse the per-model quota buckets into model variants
+    /// (Flash / Flash Lite / Pro …) on the tab, each showing its highest utilization.
+    /// When false, every individual model is listed.
+    /// </summary>
+    public bool GroupByVariant { get; set; } = true;
 }

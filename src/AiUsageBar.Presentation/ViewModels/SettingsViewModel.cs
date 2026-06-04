@@ -7,9 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 namespace AiUsageBar.Presentation.ViewModels;
 
 /// <summary>
-/// Settings dialog — pick the primary vendor and the color theme. (Z.AI / OpenRouter
-/// key fields were removed when those vendors were taken off the UI; Anthropic, OpenAI
-/// and Copilot all authenticate from their own local credential stores.)
+/// Settings dialog — pick the primary vendor and the color theme. Every vendor
+/// (Anthropic, OpenAI, Copilot, Gemini) authenticates from its own local credential
+/// store, so there are no API-key fields here.
 /// </summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
@@ -77,7 +77,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            ConfigWriter.Save(AppPaths.ConfigFile, Primary, Theme, null, null, Opacity, OpacityAffectsTray, LaunchAtStartup);
+            ConfigWriter.Save(AppPaths.ConfigFile, Primary, Theme, Opacity, OpacityAffectsTray, LaunchAtStartup);
             // Register/unregister the OS auto-start entry to match the saved preference.
             AutoStartManager.Apply(LaunchAtStartup);
             Status = $"Saved to {AppPaths.ConfigFile}";

@@ -15,11 +15,10 @@ namespace AiUsageBar.Core.Config;
 public static class ConfigWriter
 {
     /// <summary>
-    /// Persist <c>[ui].primary</c> and <c>[ui].theme</c> plus optional Z.AI /
-    /// OpenRouter inline keys. Keys are only written when non-empty (avoids
-    /// clobbering with a blank).
+    /// Persist <c>[ui].primary</c>, <c>[ui].theme</c> and the window/opacity/startup
+    /// preferences, preserving all surrounding comments and unrelated fields.
     /// </summary>
-    public static void Save(string path, VendorId primary, ThemeId theme, string? zaiKey, string? openRouterKey,
+    public static void Save(string path, VendorId primary, ThemeId theme,
         int? opacity = null, bool? opacityAffectsTray = null, bool? launchAtStartup = null)
     {
         var text = File.Exists(path) ? File.ReadAllText(path) : "";
@@ -33,8 +32,6 @@ public static class ConfigWriter
         if (opacity is { } op) SetKey(lines, "ui", "opacity", op.ToString(), quote: false);
         if (opacityAffectsTray is { } tray) SetKey(lines, "ui", "opacity_affects_tray", tray ? "true" : "false", quote: false);
         if (launchAtStartup is { } launch) SetKey(lines, "ui", "launch_at_startup", launch ? "true" : "false", quote: false);
-        if (!string.IsNullOrEmpty(zaiKey)) SetKey(lines, "zai", "api_key", zaiKey);
-        if (!string.IsNullOrEmpty(openRouterKey)) SetKey(lines, "openrouter", "api_key", openRouterKey);
 
         var sb = new StringBuilder();
         for (var i = 0; i < lines.Count; i++)

@@ -1,6 +1,5 @@
 using AiUsageBar.Core.Caching;
 using AiUsageBar.Core.Errors;
-using Xunit;
 
 namespace AiUsageBar.Core.Tests;
 

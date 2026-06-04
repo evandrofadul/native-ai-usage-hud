@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:AiUsageBar.Presentation.ViewModels;assembly=AiUsageBar.Presentation"
              xmlns:models="clr-namespace:AiUsageBar.Core.Models;assembly=AiUsageBar.Core"
-             xmlns:icons="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              x:Class="AiUsageBar.AvaloniaApp.Controls.SettingsView"
              x:DataType="vm:SettingsViewModel"
              Foreground="{DynamicResource FgBrush}"
@@ -51,16 +50,16 @@
                                          Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <Ellipse Width="9" Height="9"
                                          Fill="{Binding SevLow, Converter={StaticResource HexToBrush}}"
-                                         Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                         Margin="0,1,3,0" VerticalAlignment="Center"/>
                                 <Ellipse Width="9" Height="9"
                                          Fill="{Binding SevMid, Converter={StaticResource HexToBrush}}"
-                                         Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                         Margin="0,1,3,0" VerticalAlignment="Center"/>
                                 <Ellipse Width="9" Height="9"
                                          Fill="{Binding SevHigh, Converter={StaticResource HexToBrush}}"
-                                         Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                         Margin="0,1,3,0" VerticalAlignment="Center"/>
                                 <Ellipse Width="9" Height="9"
                                          Fill="{Binding SevCritical, Converter={StaticResource HexToBrush}}"
-                                         Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                         Margin="0,1,10,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </DataTemplate>
@@ -122,18 +121,18 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
                     <Button Command="{Binding CancelCommand}" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
-                            <icons:SymbolIcon Symbol="Dismiss" IconVariant="Regular" FontSize="14"
-                                              VerticalAlignment="Center"
-                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                            <PathIcon Data="{StaticResource IconDismiss}" Width="10" Height="10"
+                                      VerticalAlignment="Center"
+                                      Foreground="{Binding $parent[Button].Foreground}"/>
                             <TextBlock Text="Close" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding SaveCommand}" IsDefault="True"
                             Theme="{StaticResource AccentButton}">
                         <StackPanel Orientation="Horizontal">
-                            <icons:SymbolIcon Symbol="Save" IconVariant="Regular" FontSize="14"
-                                              VerticalAlignment="Center"
-                                              Foreground="{Binding $parent[Button].Foreground}"/>
+                            <PathIcon Data="{StaticResource IconSave}" Width="13" Height="13"
+                                      VerticalAlignment="Center"
+                                      Foreground="{Binding $parent[Button].Foreground}"/>
                             <TextBlock Text="Save" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

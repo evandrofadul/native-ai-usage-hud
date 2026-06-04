@@ -11,8 +11,6 @@ using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using FluentIcons.Avalonia;
-using FluentIcons.Common;
 using SD = System.Drawing;
 using SDD = System.Drawing.Drawing2D;
 
@@ -94,10 +92,12 @@ public sealed class WindowsTrayController : ITrayController
         panel.Children.Add(BuildVendorSwitcher());
         panel.Children.Add(Separator());
 
-        panel.Children.Add(MenuItem("Open", Symbol.Open, () => { HideMenu(); _showWindow(); }));
-        panel.Children.Add(MenuItem("Refresh all", Symbol.ArrowSync, async () => { HideMenu(); await _vm.RefreshAllAsync(); }));
+        panel.Children.Add(MenuItem("Open", "IconOpen", () => { HideMenu(); _showWindow(); }, iconSize: 13));
+        panel.Children.Add(MenuItem("Refresh all", "IconArrowSync", async () => { HideMenu(); await _vm.RefreshAllAsync(); }, iconSize: 15));
         panel.Children.Add(Separator());
-        panel.Children.Add(MenuItem("Quit", Symbol.Power, () => { HideMenu(); _quit(); }));
+        // Power is the 20px Fluent grid (no 16px variant), so it carries more internal
+        // padding — nudge it up a touch so it reads the same size as the others.
+        panel.Children.Add(MenuItem("Quit", "IconPower", () => { HideMenu(); _quit(); }, iconSize: 14));
 
         var card = new Border
         {
@@ -122,7 +122,7 @@ public sealed class WindowsTrayController : ITrayController
         grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
 
-        var prev = ArrowButton(Symbol.ChevronLeft);
+        var prev = ArrowButton("IconChevronLeft", iconSize: 12);
         prev.Click += (_, _) => { _vm.CyclePrev(); RefreshVendorLabel(); };
         Grid.SetColumn(prev, 0);
         grid.Children.Add(prev);
@@ -139,7 +139,7 @@ public sealed class WindowsTrayController : ITrayController
         Grid.SetColumn(_vendorLabel, 1);
         grid.Children.Add(_vendorLabel);
 
-        var next = ArrowButton(Symbol.ChevronRight);
+        var next = ArrowButton("IconChevronRight", iconSize: 12);
         next.Click += (_, _) => { _vm.CycleNext(); RefreshVendorLabel(); };
         Grid.SetColumn(next, 2);
         grid.Children.Add(next);
@@ -147,16 +147,16 @@ public sealed class WindowsTrayController : ITrayController
         return grid;
     }
 
-    private Button ArrowButton(Symbol symbol) => new()
+    private Button ArrowButton(string iconKey, double iconSize = DefaultIconSize) => new()
     {
         Theme = Theme("MenuArrowButton"),
-        Content = MenuIcon(symbol),
+        Content = MenuIcon(iconKey, iconSize),
     };
 
-    private Button MenuItem(string header, Symbol symbol, Action onClick)
+    private Button MenuItem(string header, string iconKey, Action onClick, double iconSize = DefaultIconSize)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal };
-        var icon = MenuIcon(symbol);
+        var icon = MenuIcon(iconKey, iconSize);
         icon.Margin = new Thickness(0, 0, 10, 0);
         row.Children.Add(icon);
         row.Children.Add(new TextBlock { Text = header, VerticalAlignment = VerticalAlignment.Center });
@@ -166,13 +166,20 @@ public sealed class WindowsTrayController : ITrayController
         return btn;
     }
 
-    private SymbolIcon MenuIcon(Symbol symbol) => new()
+    /// <summary>Default size (px) for tray menu glyphs; override per call via the iconSize argument.</summary>
+    private const double DefaultIconSize = 16;
+
+    private PathIcon MenuIcon(string iconKey, double size = DefaultIconSize) => new()
     {
-        Symbol = symbol,
-        IconVariant = IconVariant.Regular,
-        FontSize = 13,
+        Data = Geo(iconKey),
+        Width = size,
+        Height = size,
+        UseLayoutRounding = true,
         Foreground = Res("FgBrush"),
     };
+
+    private Geometry? Geo(string key) =>
+        _app.TryGetResource(key, null, out var v) ? v as Geometry : null;
 
     private void RefreshVendorLabel()
     {
@@ -252,7 +259,7 @@ public sealed class WindowsTrayController : ITrayController
         header.Children.Add(badge);
         header.Children.Add(new TextBlock
         {
-            Text = "AI Usage", FontSize = 13, FontWeight = FontWeight.SemiBold,
+            Text = "Usage HUD", FontSize = 13, FontWeight = FontWeight.SemiBold,
             Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center,
             Foreground = Res("FgBrush"),
         });

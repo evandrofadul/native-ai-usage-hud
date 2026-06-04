@@ -1,5 +1,3 @@
-using System.Net.Http;
-using System.Threading;
 using AiUsageBar.AvaloniaApp.Platform;
 using AiUsageBar.AvaloniaApp.Themes;
 using AiUsageBar.AvaloniaApp.Tray;

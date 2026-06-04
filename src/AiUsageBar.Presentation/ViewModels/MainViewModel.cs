@@ -36,6 +36,12 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Reads richer Codex stats (sessions, streaks, heatmap) for the dashboard.</summary>
     private readonly CodexUsageStatsReader _codexStats = new();
 
+    /// <summary>Reads local Gemini CLI token usage for the active project (Gemini tab).</summary>
+    private readonly GeminiTokenReader _geminiTokens = new();
+
+    /// <summary>Reads richer Gemini CLI stats (sessions, streaks, heatmap) for the dashboard.</summary>
+    private readonly GeminiUsageStatsReader _geminiStats = new();
+
     private AppConfig _config;
     private UsageService _service;
 
@@ -80,7 +86,8 @@ public sealed partial class MainViewModel : ObservableObject
     private void BuildTabs()
     {
         var enabled = _config.EnabledVendors();
-        Tabs = new ObservableCollection<VendorTabViewModel>(enabled.Select(v => new VendorTabViewModel(v)));
+        Tabs = new ObservableCollection<VendorTabViewModel>(
+            enabled.Select(v => new VendorTabViewModel(v, _config.Gemini.GroupByVariant)));
         var primary = _config.Ui.Primary ?? VendorId.Anthropic;
         var idx = enabled.ToList().IndexOf(primary);
         SelectedIndex = idx >= 0 ? idx : 0;
@@ -132,7 +139,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Append local agent token usage as a section: Claude Code on the Anthropic tab,
-    /// Codex on the OpenAI tab. Read off-thread; failures are swallowed (best-effort).
+    /// Codex on the OpenAI tab, Gemini CLI on the Gemini tab. Read off-thread; failures
+    /// are swallowed (best-effort).
     /// </summary>
     private async Task AttachTokensAsync(VendorTabViewModel tab)
     {
@@ -147,6 +155,10 @@ public sealed partial class MainViewModel : ObservableObject
                 case VendorId.Openai:
                     tab.SetTokens(await Task.Run(() => _codexTokens.Read()), "Codex tokens");
                     tab.SetDashboard(await Task.Run(() => _codexStats.Read()));
+                    break;
+                case VendorId.Gemini:
+                    tab.SetTokens(await Task.Run(() => _geminiTokens.Read()), "Gemini CLI tokens");
+                    tab.SetDashboard(await Task.Run(() => _geminiStats.Read()));
                     break;
             }
         }
