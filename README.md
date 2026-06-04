@@ -1,4 +1,4 @@
-# ai-usagebar-wpf
+# AI Usage HUD
 
 Cross-platform (Avalonia) port of `ai-usagebar` — monitors AI plan usage for
 **Anthropic Claude**, **OpenAI Codex/ChatGPT**, **GitHub Copilot** and
@@ -39,7 +39,7 @@ endpoints, so there is no separate in-app login.
 
 1. Install the .NET 10 SDK with the Windows Desktop workload.
 2. Authenticate the vendors you want to use.
-3. Optionally create `%APPDATA%\ai-usagebar\config.toml`.
+3. Optionally create `%APPDATA%\ai-usage-hud\config.toml`.
 4. Run the app.
 
 Authentication prerequisites:
@@ -53,16 +53,16 @@ Authentication prerequisites:
 ```powershell
 dotnet build
 dotnet test
-dotnet run --project src/AiUsageBar.App
+dotnet run --project src/AiUsageHud.App
 ```
 
 ### Build a distributable executable
 
 ```powershell
-dotnet publish src/AiUsageBar.App/AiUsageBar.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true
+dotnet publish src/AiUsageHud.App/AiUsageHud.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true
 ```
 
-The published output lands under `src/AiUsageBar.App/bin/Release/net10.0-windows/win-x64/publish/`.
+The published output lands under `src/AiUsageHud.App/bin/Release/net10.0-windows/win-x64/publish/`.
 
 This publish mode is framework-dependent, so the target machine needs the .NET
 10 Windows Desktop Runtime installed.
@@ -73,13 +73,13 @@ The Avalonia head sits on top of a platform-neutral core and shared view models:
 
 ```
 src/
-  AiUsageBar.Core/         # platform-neutral core (no UI framework) — all logic + networking
-  AiUsageBar.Presentation/ # shared view models + abstractions (IUiDispatcher, IThemeService)
-  AiUsageBar.AvaloniaApp/  # Avalonia head — UI + tray
-  AiUsageBar.Core.Tests/   # xUnit suite (ported from the Rust tests)
+  AiUsageHud.Core/         # platform-neutral core (no UI framework) — all logic + networking
+  AiUsageHud.Presentation/ # shared view models + abstractions (IUiDispatcher, IThemeService)
+  AiUsageHud.App/  # Avalonia head — UI + tray
+  AiUsageHud.Core.Tests/   # xUnit suite (ported from the Rust tests)
 ```
 
-`AiUsageBar.Core` mirrors the Rust crate module-for-module: `Models`, `Pacing`
+`AiUsageHud.Core` mirrors the Rust crate module-for-module: `Models`, `Pacing`
 (pacing/countdown/severity), `Config` (+ `AppPaths`, `ConfigWriter`), `Caching`
 (atomic write + TTL + lock + last-error), and one folder per vendor
 (`Vendors/Anthropic`, `OpenAi`, `Copilot`, `Gemini`) with `Types` / `Creds` /
@@ -87,7 +87,7 @@ src/
 `Core/Theming/PaletteColors.cs` is the single source of truth for the 58 theme
 palettes.
 
-`AiUsageBar.Presentation` holds every view model (`MainViewModel`,
+`AiUsageHud.Presentation` holds every view model (`MainViewModel`,
 `VendorTabViewModel`, `SettingsViewModel`, the section/dashboard VMs,
 `ThemeOption`) plus `OpacityManager` and the framework-agnostic abstractions the
 head implements: `IUiDispatcher` (timer) and `IThemeService` (palette swap). The
@@ -117,8 +117,8 @@ pwsh tools/Generate-Palettes.ps1            # PaletteColors.cs + Avalonia OneDar
 
 | Purpose            | Windows                                       | Linux                                  |
 |--------------------|-----------------------------------------------|----------------------------------------|
-| Config             | `%APPDATA%\ai-usagebar\config.toml`           | `~/.config/ai-usagebar/config.toml`    |
-| Cache (per vendor) | `%LOCALAPPDATA%\ai-usagebar\<vendor>\`        | `~/.local/share/ai-usagebar/<vendor>/` |
+| Config             | `%APPDATA%\ai-usage-hud\config.toml`           | `~/.config/ai-usage-hud/config.toml`    |
+| Cache (per vendor) | `%LOCALAPPDATA%\ai-usage-hud\<vendor>\`        | `~/.local/share/ai-usage-hud/<vendor>/` |
 | Anthropic creds    | `%USERPROFILE%\.claude\.credentials.json`     | `~/.claude/.credentials.json`          |
 | OpenAI creds       | `%USERPROFILE%\.codex\auth.json`              | `~/.codex/auth.json`                   |
 | Copilot creds      | Windows Credential Manager (`copilot-cli` / `gh`) | `~/.config/gh/hosts.yml` (gh CLI)  |
@@ -163,7 +163,7 @@ file-only for now.
 ```powershell
 dotnet build
 dotnet test                                      # 108 tests
-dotnet run --project src/AiUsageBar.AvaloniaApp  # Avalonia head
+dotnet run --project src/AiUsageHud.App  # Avalonia head
 ```
 
 Requires the .NET 10 SDK. The app builds the tray glyph at runtime and starts
@@ -188,8 +188,8 @@ The Avalonia head sets `PublishAot=true`; a self-contained, AOT-compiled binary
 comes out of:
 
 ```powershell
-dotnet publish src/AiUsageBar.AvaloniaApp -c Release -r win-x64    # on Windows
-dotnet publish src/AiUsageBar.AvaloniaApp -c Release -r linux-x64  # on Linux
+dotnet publish src/AiUsageHud.App -c Release -r win-x64    # on Windows
+dotnet publish src/AiUsageHud.App -c Release -r linux-x64  # on Linux
 ```
 
 > Native AOT does **not** cross-compile between operating systems — each target

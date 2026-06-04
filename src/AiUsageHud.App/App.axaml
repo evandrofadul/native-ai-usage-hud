@@ -1,0 +1,26 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AiUsageHud.App.App">
+    <!-- SimpleTheme is used ONLY as structural plumbing for controls we don't draw
+         ourselves (ScrollViewer/ItemsControl/ScrollContentPresenter). Controls.axaml
+         comes AFTER it and re-templates every visible control to match the WPF look,
+         so SimpleTheme's own appearance never shows through. -->
+    <Application.Styles>
+        <SimpleTheme/>
+        <StyleInclude Source="avares://AiUsageHud/Themes/Controls.axaml"/>
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Index 0 is the active color palette; AvaloniaThemeService swaps it at
+                     runtime. The control styles reference the palette via DynamicResource,
+                     so the UI recolors live when the palette is replaced. -->
+                <ResourceInclude Source="avares://AiUsageHud/Themes/Palettes/OneDark.axaml"/>
+                <!-- Index 1+: stable resources the palette swap must not disturb. Icon
+                     geometries replace the former FluentIcons.Avalonia SymbolIcon glyphs. -->
+                <ResourceInclude Source="avares://AiUsageHud/Themes/Icons.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

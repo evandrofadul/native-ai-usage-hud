@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiUsageHud.App/AiUsageHud.App.csproj">
+      <Build Solution="Release|*" Project="false" />
+    </Project>
+    <Project Path="src/AiUsageHud.Core.Tests/AiUsageHud.Core.Tests.csproj" />
+    <Project Path="src/AiUsageHud.Core/AiUsageHud.Core.csproj" />
+    <Project Path="src/AiUsageHud.Presentation/AiUsageHud.Presentation.csproj">
+      <Build Solution="Release|*" Project="false" />
+    </Project>
+  </Folder>
+</Solution>

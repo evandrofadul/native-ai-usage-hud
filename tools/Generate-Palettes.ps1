@@ -1,7 +1,7 @@
 # Single source of truth: tools/palettes.json (theme name -> 15 named colors).
 # This generator emits, from that JSON:
-#   * src/AiUsageBar.Core/Theming/PaletteColors.cs   (always)
-#   * src/AiUsageBar.AvaloniaApp/Themes/Palettes/OneDark.axaml (when that project dir exists)
+#   * src/AiUsageHud.Core/Theming/PaletteColors.cs   (always)
+#   * src/AiUsageHud.App/Themes/Palettes/OneDark.axaml (when that project dir exists)
 #
 # The Avalonia head builds every palette at runtime from PaletteColors.cs (the AOT-safe
 # path), so it needs only OneDark.axaml — the compile-time default merged at index 0 of
@@ -30,9 +30,9 @@ $names = $json.Keys | Sort-Object
 # ---- PaletteColors.cs -------------------------------------------------------
 $ctorParams = ($map.Values | ForEach-Object { "string $_" }) -join ', '
 $sb = [System.Text.StringBuilder]::new()
-[void]$sb.AppendLine('using AiUsageBar.Core.Models;')
+[void]$sb.AppendLine('using AiUsageHud.Core.Models;')
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('namespace AiUsageBar.Core.Theming;')
+[void]$sb.AppendLine('namespace AiUsageHud.Core.Theming;')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('/// <summary>')
 [void]$sb.AppendLine('/// The 15 named colors of a theme palette, as #RRGGBB hex strings. Single source of')
@@ -56,7 +56,7 @@ foreach ($name in $names) {
 [void]$sb.AppendLine('    public static PaletteColors For(ThemeId id) => All.TryGetValue(id, out var p) ? p : All[ThemeId.OneDark];')
 [void]$sb.AppendLine('}')
 
-$coreOut = Join-Path $root 'src/AiUsageBar.Core/Theming'
+$coreOut = Join-Path $root 'src/AiUsageHud.Core/Theming'
 if (-not (Test-Path $coreOut)) { New-Item -ItemType Directory -Force $coreOut | Out-Null }
 $sb.ToString() | Set-Content -Path (Join-Path $coreOut 'PaletteColors.cs') -Encoding UTF8 -NoNewline
 Write-Host "Wrote PaletteColors.cs ($($names.Count) themes)"
@@ -83,6 +83,6 @@ function Write-Dict($dir, $ext, $headerNs, $onlyNames = $null) {
 }
 
 $avaloniaNs = 'xmlns="https://github.com/avaloniaui"' + "`n                    " + 'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'
-if (Write-Dict (Join-Path $root 'src/AiUsageBar.AvaloniaApp/Themes/Palettes') '.axaml' $avaloniaNs @('OneDark')) {
+if (Write-Dict (Join-Path $root 'src/AiUsageHud.App/Themes/Palettes') '.axaml' $avaloniaNs @('OneDark')) {
   Write-Host "Wrote Avalonia OneDark.axaml (bootstrap default; runtime palettes come from PaletteColors.cs)"
 }

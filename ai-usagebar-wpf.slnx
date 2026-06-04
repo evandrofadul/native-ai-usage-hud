@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/AiUsageBar.AvaloniaApp/AiUsageBar.AvaloniaApp.csproj" />
-    <Project Path="src/AiUsageBar.Core.Tests/AiUsageBar.Core.Tests.csproj" />
-    <Project Path="src/AiUsageBar.Core/AiUsageBar.Core.csproj" />
-    <Project Path="src/AiUsageBar.Presentation/AiUsageBar.Presentation.csproj" />
-  </Folder>
-</Solution>
