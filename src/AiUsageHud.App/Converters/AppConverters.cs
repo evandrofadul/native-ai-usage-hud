@@ -93,6 +93,31 @@ public sealed class ThemeIdToOptionConverter : IValueConverter
 }
 
 /// <summary>
+/// Maps a <see cref="VendorId"/> to its brand glyph geometry (the <c>IconVendor*</c>
+/// resources in Icons.axaml), so each vendor tab pill can show its logo via a PathIcon.
+/// Returns the shared <see cref="Geometry"/> resource; null if it can't be resolved.
+/// </summary>
+public sealed class VendorToGeometryConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var key = value switch
+        {
+            VendorId.Anthropic => "IconVendorAnthropic",
+            VendorId.Openai => "IconVendorOpenAI",
+            VendorId.Copilot => "IconVendorCopilot",
+            VendorId.Gemini => "IconVendorGemini",
+            _ => null,
+        };
+        return key is not null && Application.Current is { } app
+            && app.TryGetResource(key, null, out var g) ? g : null;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>
 /// True when the bound value equals the <c>ConverterParameter</c> (compared by string).
 /// Drives class-based styling that stands in for WPF's <c>DataTrigger</c>: severity
 /// gauge/text colors and heatmap intensity levels (e.g.

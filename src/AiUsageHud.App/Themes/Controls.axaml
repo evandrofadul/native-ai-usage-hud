@@ -11,11 +11,19 @@
     <Styles.Resources>
         <ResourceDictionary>
 
+            <!-- Per-component control themes split out of this monolith. Merged here so
+                 their ControlThemes land in the same resource scope as the inline ones
+                 below; add further extractions to the Controls/ folder alongside Tabs. -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://AiUsageHud/Themes/Controls/Tabs.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
             <conv:SeverityToBrushConverter x:Key="SeverityToBrush"/>
             <conv:EnumLabelConverter x:Key="EnumLabel"/>
             <conv:HexToBrushConverter x:Key="HexToBrush"/>
             <conv:EqualsConverter x:Key="Eq"/>
             <conv:ThemeIdToOptionConverter x:Key="ThemeIdToOption"/>
+            <conv:VendorToGeometryConverter x:Key="VendorIcon"/>
 
             <!-- ============================================================
                  Button — flat, rounded, accent hover
@@ -353,60 +361,8 @@
                 </Style>
             </ControlTheme>
 
-            <!-- ============================================================
-                 Tabs — pill headers + rounded content card
-                 ============================================================ -->
-            <ControlTheme x:Key="{x:Type TabItem}" TargetType="TabItem">
-                <Setter Property="Foreground" Value="{DynamicResource DimBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template">
-                    <ControlTemplate>
-                        <Border Name="Bd" CornerRadius="8,8,0,0" Margin="0,0,4,0" Padding="14,7,14,7"
-                                Background="Transparent">
-                            <ContentPresenter Content="{TemplateBinding Header}"
-                                              ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter>
-                <Style Selector="^:pointerover /template/ Border#Bd">
-                    <Setter Property="Background" Value="{DynamicResource Bg3Brush}"/>
-                </Style>
-                <Style Selector="^:pointerover">
-                    <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
-                </Style>
-                <Style Selector="^:selected /template/ Border#Bd">
-                    <Setter Property="Background" Value="{DynamicResource Bg2Brush}"/>
-                </Style>
-                <Style Selector="^:selected">
-                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                </Style>
-            </ControlTheme>
-
-            <ControlTheme x:Key="{x:Type TabControl}" TargetType="TabControl">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Template">
-                    <ControlTemplate>
-                        <Grid RowDefinitions="Auto,*">
-                            <ItemsPresenter Name="PART_ItemsPresenter" Grid.Row="0"
-                                            Margin="15,0,0,0"
-                                            ItemsPanel="{TemplateBinding ItemsPanel}"/>
-                            <Border Grid.Row="1" Background="{DynamicResource Bg2Brush}" CornerRadius="8">
-                                <ContentPresenter Name="PART_SelectedContentHost"
-                                                  Content="{TemplateBinding SelectedContent}"
-                                                  ContentTemplate="{TemplateBinding SelectedContentTemplate}"/>
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter>
-                <Setter Property="ItemsPanel">
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </Setter>
-            </ControlTheme>
+            <!-- Tabs (pill / segmented control) live in Controls/Tabs.axaml,
+                 merged in at the top of this dictionary. -->
 
             <!-- ============================================================
                  ComboBox — fully themed: box, chevron, dropdown popup, items

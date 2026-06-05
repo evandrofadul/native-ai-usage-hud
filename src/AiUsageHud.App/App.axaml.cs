@@ -87,6 +87,12 @@ public partial class App : Application
             if (!_tray.Start())
                 _window.Show();
 
+            // Dev/diagnostics helper: the app normally starts hidden (tray only), which
+            // makes it awkward to inspect or screenshot the window from automation. Setting
+            // AIHUD_SHOW_ON_START=1 reveals the main window at launch without a tray click.
+            if (Environment.GetEnvironmentVariable("AIHUD_SHOW_ON_START") == "1")
+                _window.Reveal();
+
             // Kick off the initial fetch + auto-refresh loop without blocking startup.
             _ = _vm.StartAsync();
         }

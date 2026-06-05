@@ -261,7 +261,12 @@
                             SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}">
                     <TabControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:VendorTabViewModel">
-                            <TextBlock Text="{Binding Header}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <PathIcon Data="{Binding Vendor, Converter={StaticResource VendorIcon}}"
+                                          Width="14" Height="14" VerticalAlignment="Center"
+                                          Foreground="{Binding $parent[TabItem].Foreground}"/>
+                                <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </DataTemplate>
                     </TabControl.ItemTemplate>
                     <TabControl.ContentTemplate>

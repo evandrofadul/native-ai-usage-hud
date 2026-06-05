@@ -1,0 +1,88 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:behaviors="clr-namespace:AiUsageHud.App.Behaviors">
+
+    <!-- ============================================================
+         Tabs — sliding pill / segmented control + rounded content card
+
+         Extracted from the Controls.axaml monolith so the tab look lives
+         with its own component. Merged back in via Controls.axaml's
+         Styles.Resources. Palette brushes are pulled through DynamicResource
+         so the pills recolor live when AvaloniaThemeService swaps the palette.
+
+         Layout: the headers sit inside a single recessed "track" (Bg2, no
+         outline) that hugs its pills (HorizontalAlignment=Left). A single
+         indicator (PART_Pill, a flat Bg3 surface + faint accent ring) sits
+         BEHIND the headers and slides/resizes to the selected tab — the
+         SlidingPill behavior drives it. The tabs themselves are transparent
+         and only recolor their label (accent when selected), so switching is
+         one moving highlight, never a crossfade. The content card floats below
+         with a small gap, instead of the old folder-tab look that fused the
+         selected tab into the card.
+
+         Label weight is kept constant across selection on purpose: bumping the
+         selected label to SemiBold would widen it and the pill would no longer
+         fit it exactly. Accent color + the pill carry the emphasis instead.
+         ============================================================ -->
+
+    <ControlTheme x:Key="{x:Type TabItem}" TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource DimBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <!-- Transparent header — the sliding PART_Pill provides the fill. -->
+                <Border Name="Bd" CornerRadius="7" Padding="16,6" Background="Transparent">
+                    <ContentPresenter Content="{TemplateBinding Header}"
+                                      ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:selected">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type TabControl}" TargetType="TabControl">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Recessed pill track. No outline — the Bg2 fill alone separates it,
+                         which stays consistent across palettes. ClipToBounds rounds the
+                         sliding pill into the track corners at the first/last tab. -->
+                    <Border Grid.Row="0" HorizontalAlignment="Left" ClipToBounds="True"
+                            Background="{DynamicResource Bg2Brush}" CornerRadius="8" Padding="0">
+                        <Panel>
+                            <!-- The single highlight that slides between tabs. Its accent ring
+                                 is a child so it moves and resizes with the pill. -->
+                            <Border Name="PART_Pill" Width="0"
+                                    HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                    CornerRadius="6" Background="{DynamicResource Bg3Brush}"
+                                    IsHitTestVisible="False"
+                                    behaviors:SlidingPill.IsEnabled="True">
+                                <Border CornerRadius="7" BorderThickness="1"
+                                        BorderBrush="{DynamicResource AccentBrush}" Opacity="0.4"/>
+                            </Border>
+                            <ItemsPresenter Name="PART_ItemsPresenter"
+                                            ItemsPanel="{TemplateBinding ItemsPanel}"/>
+                        </Panel>
+                    </Border>
+                    <Border Grid.Row="1" Margin="0,7,0,0"
+                            Background="{DynamicResource Bg2Brush}" CornerRadius="8">
+                        <ContentPresenter Name="PART_SelectedContentHost"
+                                          Content="{TemplateBinding SelectedContent}"
+                                          ContentTemplate="{TemplateBinding SelectedContentTemplate}"/>
+                    </Border>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal"/>
+            </ItemsPanelTemplate>
+        </Setter>
+    </ControlTheme>
+
+</ResourceDictionary>
