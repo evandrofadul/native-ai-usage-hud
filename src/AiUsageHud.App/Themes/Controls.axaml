@@ -494,6 +494,46 @@
             </ControlTheme>
 
             <!-- ============================================================
+                 ScrollViewer — overlay scrollbars
+                 SimpleTheme parks each bar in its own Auto Grid track, so the bars
+                 reserve layout space even when hidden. Re-template so the content
+                 presenter fills the whole area and the bars float on top (right /
+                 bottom edge), reserving nothing. Pairs with the auto-hide ScrollBar
+                 theme below. Parts are wired by ScrollViewer via their PART_ names.
+                 ============================================================ -->
+            <ControlTheme x:Key="{x:Type ScrollViewer}" TargetType="ScrollViewer">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Grid Background="{TemplateBinding Background}">
+                            <ScrollContentPresenter Name="PART_ContentPresenter"
+                                                    Background="{TemplateBinding Background}"
+                                                    Padding="{TemplateBinding Padding}"
+                                                    HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                                                    VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                                                    HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                                    VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
+                                                    ScrollViewer.IsScrollChainingEnabled="{TemplateBinding IsScrollChainingEnabled}"
+                                                    ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+                                <ScrollContentPresenter.GestureRecognizers>
+                                    <ScrollGestureRecognizer
+                                        CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                        CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                        IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}"/>
+                                </ScrollContentPresenter.GestureRecognizers>
+                            </ScrollContentPresenter>
+                            <ScrollBar Name="PART_HorizontalScrollBar" Orientation="Horizontal"
+                                       VerticalAlignment="Bottom"
+                                       AllowAutoHide="{TemplateBinding AllowAutoHide}"/>
+                            <ScrollBar Name="PART_VerticalScrollBar" Orientation="Vertical"
+                                       HorizontalAlignment="Right"
+                                       AllowAutoHide="{TemplateBinding AllowAutoHide}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter>
+            </ControlTheme>
+
+            <!-- ============================================================
                  Thin dark scrollbar — pill thumb, hidden track buttons
                  ============================================================ -->
             <ControlTheme x:Key="ScrollThumb" TargetType="Thumb">
@@ -509,6 +549,15 @@
 
             <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
                 <Setter Property="Background" Value="Transparent"/>
+                <!-- Auto-hide: invisible at rest, faded in only while the pointer is
+                     over the related scrollable content (see ScrollViewer style below)
+                     or hovering the bar itself. -->
+                <Setter Property="Opacity" Value="0"/>
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                    </Transitions>
+                </Setter>
                 <Setter Property="Template">
                     <ControlTemplate>
                         <Grid Background="{TemplateBinding Background}">
@@ -530,6 +579,10 @@
                 </Style>
                 <Style Selector="^:horizontal">
                     <Setter Property="Height" Value="6"/>
+                </Style>
+                <!-- Keep the bar visible while it is hovered or being dragged. -->
+                <Style Selector="^:pointerover">
+                    <Setter Property="Opacity" Value="1"/>
                 </Style>
             </ControlTheme>
 
@@ -566,6 +619,12 @@
          (no sub-pixel blur) at icon sizes. -->
     <Style Selector="PathIcon">
         <Setter Property="UseLayoutRounding" Value="True"/>
+    </Style>
+
+    <!-- Scrollbars auto-hide: the ScrollBar theme keeps them at Opacity 0 at rest;
+         reveal them only while the pointer is over the owning ScrollViewer's content. -->
+    <Style Selector="ScrollViewer:pointerover /template/ ScrollBar">
+        <Setter Property="Opacity" Value="1"/>
     </Style>
 
     <!-- Severity value text: color tracks the metric's severity. -->
