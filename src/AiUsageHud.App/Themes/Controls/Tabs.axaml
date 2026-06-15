@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:behaviors="clr-namespace:AiUsageHud.App.Behaviors">
+                    xmlns:behaviors="clr-namespace:AiUsageHud.App.Behaviors"
+                    xmlns:controls="clr-namespace:AiUsageHud.App.Controls">
 
     <!-- ============================================================
          Tabs — sliding pill / segmented control + rounded content card
@@ -51,8 +52,9 @@
                 <Grid RowDefinitions="Auto,*">
                     <!-- Recessed pill track. No outline — the Bg2 fill alone separates it,
                          which stays consistent across palettes. ClipToBounds rounds the
-                         sliding pill into the track corners at the first/last tab. -->
-                    <Border Grid.Row="0" HorizontalAlignment="Left" ClipToBounds="True"
+                         sliding pill into the track corners at the first/last tab. Stretches
+                         full width so the pills fill the window (see AdaptivePillPanel). -->
+                    <Border Grid.Row="0" HorizontalAlignment="Stretch" ClipToBounds="True"
                             Background="{DynamicResource Bg2Brush}" CornerRadius="8" Padding="0">
                         <Panel>
                             <!-- The single highlight that slides between tabs. Its accent ring
@@ -78,9 +80,10 @@
                 </Grid>
             </ControlTemplate>
         </Setter>
+        <!-- Equal-width pills that fill the strip; trailing pills drop when too narrow. -->
         <Setter Property="ItemsPanel">
             <ItemsPanelTemplate>
-                <StackPanel Orientation="Horizontal"/>
+                <controls:AdaptivePillPanel MinChildWidth="92"/>
             </ItemsPanelTemplate>
         </Setter>
     </ControlTheme>

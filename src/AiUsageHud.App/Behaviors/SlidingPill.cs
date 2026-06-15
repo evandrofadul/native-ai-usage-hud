@@ -44,7 +44,10 @@ public static class SlidingPill
         public Transitions? Transitions;
         public EventHandler<SelectionChangedEventArgs>? OnSelection;
         public EventHandler? OnLayout;
-        public bool Placed;
+        // Geometry of the selected header the pill is currently placed against. NaN until
+        // the first placement; used to skip redundant layout-driven repositioning.
+        public double TargetX = double.NaN;
+        public double TargetWidth = double.NaN;
     }
 
     private static readonly ConditionalWeakTable<Border, State> States = new();
@@ -74,17 +77,20 @@ public static class SlidingPill
 
         var st = States.GetValue(pill, _ => new State());
         st.Tabs = tabs;
-        st.Placed = false;
+        st.TargetX = double.NaN;
+        st.TargetWidth = double.NaN;
         st.Transitions =
         [
             new DoubleTransition { Property = Layoutable.WidthProperty, Duration = Duration, Easing = new CubicEaseOut() },
             new TransformOperationsTransition { Property = Visual.RenderTransformProperty, Duration = Duration, Easing = new CubicEaseOut() },
         ];
 
-        // Slide on selection; the layout pass drives the very first placement, retrying
-        // until the selected header has real bounds (tab widths are static thereafter).
+        // Slide on selection; snap on every layout pass so the pill tracks the first
+        // placement and any later resize (the headers are equal-width and grow/shrink with
+        // the window). Place() self-skips when the selected header hasn't actually moved,
+        // so the selection width tween — which itself triggers layout — isn't cancelled.
         st.OnSelection = (_, _) => Place(pill, animated: true);
-        st.OnLayout = (_, _) => { if (!st.Placed) Place(pill, animated: false); };
+        st.OnLayout = (_, _) => Place(pill, animated: false);
         tabs.SelectionChanged += st.OnSelection;
         tabs.LayoutUpdated += st.OnLayout;
     }
@@ -111,19 +117,26 @@ public static class SlidingPill
         if (header.TranslatePoint(default, panel) is not { } topLeft) return;
         var width = header.Bounds.Width;
         if (width <= 1) return;   // not measured yet — wait for the next layout pass
+        var x = topLeft.X;
 
-        // First placement snaps into position; arm the transitions afterwards so only
-        // subsequent selections animate (otherwise the pill flies in from x=0,width=0).
+        // Layout-driven (snap) calls are no-ops unless the selected header truly moved or
+        // resized — so the per-frame layout from the selection width tween, or any unrelated
+        // layout pass, neither cancels the animation nor churns transform allocations.
+        if (!animated && Close(x, st.TargetX) && Close(width, st.TargetWidth)) return;
+
+        // Snap with transitions off (first placement / resize); selection animates. Re-arm
+        // after a snap so the next selection still glides instead of jumping.
         pill.Transitions = animated ? st.Transitions : null;
 
         pill.Width = width;
         pill.RenderTransform = TransformOperations.Parse(
-            string.Format(CultureInfo.InvariantCulture, "translateX({0}px)", topLeft.X));
+            string.Format(CultureInfo.InvariantCulture, "translateX({0}px)", x));
+        st.TargetX = x;
+        st.TargetWidth = width;
 
         if (!animated)
-        {
             pill.Transitions = st.Transitions;
-            st.Placed = true;
-        }
     }
+
+    private static bool Close(double a, double b) => Math.Abs(a - b) < 0.5;
 }
