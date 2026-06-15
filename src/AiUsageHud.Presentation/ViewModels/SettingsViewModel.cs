@@ -18,6 +18,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Theme entries with color swatches for the picker (see <see cref="ThemeOption"/>).</summary>
     public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeOption.All;
 
+    /// <summary>
+    /// Window transparency is offered only on Windows (it dims the custom Win32 tray
+    /// popup/menu too), so the whole section is hidden on other platforms.
+    /// </summary>
+    public bool IsWindows { get; } = OperatingSystem.IsWindows();
+
     /// <summary>Live-applies the palette swap (framework-specific), injected by the host.</summary>
     private readonly IThemeService _themeService;
 

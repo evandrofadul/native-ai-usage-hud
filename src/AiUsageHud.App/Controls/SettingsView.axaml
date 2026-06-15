@@ -70,36 +70,38 @@
                            Foreground="{DynamicResource DimBrush}" FontSize="11"
                            TextWrapping="Wrap" Margin="2,0,5,22"/>
 
-                <!-- Window transparency -->
-                <TextBlock Text="WINDOW TRANSPARENCY" FontWeight="Bold" FontSize="11"
-                           Foreground="{DynamicResource DimBrush}" Margin="0,0,0,8"/>
-                <Grid Margin="0,0,0,2" ColumnDefinitions="*,Auto">
-                    <Slider Grid.Column="0" Theme="{StaticResource ThemedSlider}"
-                            Minimum="10" Maximum="100" Value="{Binding Opacity, Mode=TwoWay}"
-                            VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="12,0,2,0"
-                               MinWidth="34" TextAlignment="Right" FontWeight="SemiBold" FontSize="12"
-                               Foreground="{DynamicResource FgBrush}"
-                               Text="{Binding Opacity, StringFormat='{}{0}%'}"/>
-                </Grid>
+                <!-- Window transparency — Windows only (also dims the custom Win32 tray UI). -->
+                <StackPanel IsVisible="{Binding IsWindows}">
+                    <TextBlock Text="WINDOW TRANSPARENCY" FontWeight="Bold" FontSize="11"
+                               Foreground="{DynamicResource DimBrush}" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,2" ColumnDefinitions="*,Auto">
+                        <Slider Grid.Column="0" Theme="{StaticResource ThemedSlider}"
+                                Minimum="10" Maximum="100" Value="{Binding Opacity, Mode=TwoWay}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="12,0,2,0"
+                                   MinWidth="34" TextAlignment="Right" FontWeight="SemiBold" FontSize="12"
+                                   Foreground="{DynamicResource FgBrush}"
+                                   Text="{Binding Opacity, StringFormat='{}{0}%'}"/>
+                    </Grid>
 
-                <TextBlock Text="Lower values make the whole window see-through (10–100%)."
-                           Foreground="{DynamicResource DimBrush}" FontSize="11"
-                           TextWrapping="Wrap" Margin="2,0,5,12"/>
+                    <TextBlock Text="Lower values make the whole window see-through (10–100%)."
+                               Foreground="{DynamicResource DimBrush}" FontSize="11"
+                               TextWrapping="Wrap" Margin="2,0,5,12"/>
 
-                <!-- Apply-to-tray switch -->
-                <Grid Margin="0,0,0,2" ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap"
-                               Margin="0,0,10,0" FontSize="12" Foreground="{DynamicResource FgBrush}"
-                               Text="Also apply to the tray popup &amp; menu"/>
-                    <ToggleButton Grid.Column="1" Theme="{StaticResource ToggleSwitch}"
-                                  VerticalAlignment="Center"
-                                  IsChecked="{Binding OpacityAffectsTray, Mode=TwoWay}"/>
-                </Grid>
+                    <!-- Apply-to-tray switch -->
+                    <Grid Margin="0,0,0,2" ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap"
+                                   Margin="0,0,10,0" FontSize="12" Foreground="{DynamicResource FgBrush}"
+                                   Text="Also apply to the tray popup &amp; menu"/>
+                        <ToggleButton Grid.Column="1" Theme="{StaticResource ToggleSwitch}"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding OpacityAffectsTray, Mode=TwoWay}"/>
+                    </Grid>
 
-                <TextBlock Text="When on, the tray's hover card and right-click menu use the same transparency."
-                           Foreground="{DynamicResource DimBrush}" FontSize="11"
-                           TextWrapping="Wrap" Margin="2,0,5,22"/>
+                    <TextBlock Text="When on, the tray's hover card and right-click menu use the same transparency."
+                               Foreground="{DynamicResource DimBrush}" FontSize="11"
+                               TextWrapping="Wrap" Margin="2,0,5,22"/>
+                </StackPanel>
 
                 <!-- Launch at login -->
                 <TextBlock Text="STARTUP" FontWeight="Bold" FontSize="11"

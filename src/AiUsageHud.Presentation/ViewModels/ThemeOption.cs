@@ -34,7 +34,13 @@ public sealed class ThemeOption
         SevCritical = p.SevCritical;
     }
 
-    /// <summary>One option per theme, in canonical order. Built once and reused.</summary>
+    /// <summary>
+    /// One option per theme, sorted alphabetically by <see cref="Label"/> for the picker.
+    /// Built once and reused; order is display-only (lookups go by <see cref="Id"/>).
+    /// </summary>
     public static IReadOnlyList<ThemeOption> All { get; } =
-        ThemeIdExtensions.All.Select(id => new ThemeOption(id)).ToList();
+        ThemeIdExtensions.All
+            .Select(id => new ThemeOption(id))
+            .OrderBy(o => o.Label, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 }
