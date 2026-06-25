@@ -40,7 +40,7 @@ public sealed class AnthropicUsageResponse
                 System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
                 out var dt))
             reset = dt;
-        return new UsageWindow((int)Math.Round(w.Utilization), reset, dur);
+        return new UsageWindow((int)Math.Clamp(Math.Round(w.Utilization), 0, 100), reset, dur);
     }
 }
 

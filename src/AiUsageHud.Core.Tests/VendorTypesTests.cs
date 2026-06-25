@@ -71,6 +71,16 @@ public class VendorTypesTests
     }
 
     [Fact]
+    public void AnthropicUtilizationClampsToHundred()
+    {
+        var snap = AnthropicUsageResponse.Parse(B("""
+            {"five_hour":{"utilization":127.4},"seven_day":{"utilization":-5}}
+            """)).ToSnapshot("Pro");
+        Assert.Equal(100, snap.Session.UtilizationPct);
+        Assert.Equal(0, snap.Weekly.UtilizationPct);
+    }
+
+    [Fact]
     public void AnthropicPlanLabels()
     {
         Assert.Equal("Max 5x", ParseCreds("max", "default_claude_max_5x").PlanLabel());
@@ -114,6 +124,15 @@ public class VendorTypesTests
         Assert.Equal("$2.50", snap.Credits!.Balance);
         Assert.Equal((100L, 200L), snap.Credits.ApproxLocalMessages);
         Assert.Equal((40L, 60L), snap.Credits.ApproxCloudMessages);
+    }
+
+    [Fact]
+    public void OpenAiResetAtAsStringParses()
+    {
+        var snap = OpenAiUsageResponse.Parse(B("""
+            {"rate_limit":{"primary_window":{"used_percent":1,"reset_at":"1779597324"}}}
+            """)).ToSnapshot(null);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1779597324), snap.Session.ResetsAt);
     }
 
     [Fact]

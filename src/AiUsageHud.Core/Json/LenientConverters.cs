@@ -29,6 +29,7 @@ public sealed class LenientNullableLongConverter : JsonConverter<long?>
         {
             JsonTokenType.Null => null,
             JsonTokenType.Number => reader.TryGetInt64(out var i) ? i : (long)reader.GetDouble(),
+            JsonTokenType.String => long.TryParse(reader.GetString(), out var s) ? s : null,
             _ => null,
         };
 
