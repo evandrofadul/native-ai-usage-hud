@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 
 namespace AiUsageHud.App.Controls;
 
@@ -9,8 +10,15 @@ namespace AiUsageHud.App.Controls;
 /// every shown pill gets the same width, so the row always spans edge to edge. Each pill
 /// is kept at least <see cref="MinChildWidth"/> wide — and never narrower than the widest
 /// pill's natural size, so icons/labels never clip. When the strip is too narrow to honor
-/// that minimum for all pills, the rightmost ones are dropped (collapsed to zero) until the
-/// rest fit, like a segmented control that sheds trailing options instead of squishing them.
+/// that minimum for all pills, some are dropped (collapsed to zero) until the rest fit,
+/// like a segmented control that sheds options instead of squishing them.
+///
+/// The dropped pills are normally the trailing (rightmost) ones, but the visible run is a
+/// contiguous window that always keeps the <em>selected</em> pill on screen: if the
+/// selection would fall past the trailing cut, leading pills are dropped instead so the
+/// selected pill stays as the rightmost visible one. That stops the sliding indicator from
+/// vanishing (and the selection from appearing to clear) when the window shrinks while a
+/// trailing vendor is active.
 ///
 /// Drop-in <c>ItemsPanel</c> for the vendor TabControl (see Themes/Controls/Tabs.axaml).
 /// Hidden pills are arranged to an empty rect (not toggled via IsVisible) so a single layout
@@ -18,7 +26,7 @@ namespace AiUsageHud.App.Controls;
 /// </summary>
 public sealed class AdaptivePillPanel : Panel
 {
-    /// <summary>Smallest width a single pill may take before trailing pills are dropped.</summary>
+    /// <summary>Smallest width a single pill may take before pills are dropped.</summary>
     public static readonly StyledProperty<double> MinChildWidthProperty =
         AvaloniaProperty.Register<AdaptivePillPanel, double>(nameof(MinChildWidth), 80d);
 
@@ -32,10 +40,30 @@ public sealed class AdaptivePillPanel : Panel
     /// count is computed identically in both passes.</summary>
     private double _minSlot = 1d;
 
+    /// <summary>The owning TabControl — watched so a selection change re-arranges the window
+    /// (cycling to a currently-dropped pill must bring it back into view).</summary>
+    private TabControl? _owner;
+
     static AdaptivePillPanel()
     {
         AffectsMeasure<AdaptivePillPanel>(MinChildWidthProperty);
     }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _owner = this.FindAncestorOfType<TabControl>();
+        if (_owner is not null) _owner.SelectionChanged += OnOwnerSelectionChanged;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (_owner is not null) _owner.SelectionChanged -= OnOwnerSelectionChanged;
+        _owner = null;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void OnOwnerSelectionChanged(object? sender, SelectionChangedEventArgs e) => InvalidateArrange();
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -74,11 +102,12 @@ public sealed class AdaptivePillPanel : Panel
         if (count == 0) return finalSize;
 
         int visible = VisibleCount(finalSize.Width, _minSlot, count, out double slot);
+        int start = WindowStart(children, visible, count);
 
         double x = 0;
         for (int i = 0; i < count; i++)
         {
-            if (i < visible)
+            if (i >= start && i < start + visible)
             {
                 children[i].Arrange(new Rect(x, 0, slot, finalSize.Height));
                 x += slot;
@@ -104,5 +133,25 @@ public sealed class AdaptivePillPanel : Panel
         int visible = Math.Clamp((int)(available / min), 1, count);
         slot = available / visible;
         return visible;
+    }
+
+    /// <summary>First index of the contiguous visible run: 0 (drop trailing) unless the
+    /// selected pill sits past the trailing cut, in which case it slides right (dropping
+    /// leading pills) just far enough to keep the selection visible.</summary>
+    private static int WindowStart(global::Avalonia.Controls.Controls children, int visible, int count)
+    {
+        if (visible >= count) return 0;
+
+        int selected = SelectedIndex(children);
+        if (selected < visible) return 0;   // -1 (none) or already within the leading window
+
+        return Math.Clamp(selected - visible + 1, 0, count - visible);
+    }
+
+    private static int SelectedIndex(global::Avalonia.Controls.Controls children)
+    {
+        for (int i = 0; i < children.Count; i++)
+            if (children[i] is TabItem { IsSelected: true }) return i;
+        return -1;
     }
 }
