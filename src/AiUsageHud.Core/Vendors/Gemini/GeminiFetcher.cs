@@ -158,21 +158,21 @@ public sealed class GeminiFetcher : IVendorFetcher
 
     private VendorOutcome FallbackToCache((int, string) lastError)
     {
-        var bytes = _cache.MaybePayload() ?? throw new OtherException("gemini: no usable cache");
+        var bytes = _cache.FallbackPayload(Cache.MaxStale) ?? throw new OtherException("gemini: no usable cache");
         var outcome = ReuseCache(bytes, true);
         return outcome with { LastError = lastError };
     }
 
     private VendorOutcome FallbackToCacheSilent()
     {
-        var bytes = _cache.MaybePayload()
+        var bytes = _cache.FallbackPayload(Cache.MaxStale)
             ?? throw new TransportException("gemini: no cache and network unreachable");
         return ReuseCache(bytes, true);
     }
 
     private VendorOutcome HandleAuthFailure(bool transient)
     {
-        var bytes = _cache.MaybePayload();
+        var bytes = _cache.FallbackPayload(Cache.MaxStale);
         if (bytes is null)
         {
             throw transient

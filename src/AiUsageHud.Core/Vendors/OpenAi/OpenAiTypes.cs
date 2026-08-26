@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AiUsageHud.Core.Errors;
 using AiUsageHud.Core.Json;
 using AiUsageHud.Core.Models;
 
@@ -11,6 +12,13 @@ namespace AiUsageHud.Core.Vendors.OpenAi;
 /// </summary>
 public sealed class OpenAiUsageResponse
 {
+    /// <summary><c>limit_window_seconds</c> the API reports for the 5-hour window.</summary>
+    private const long SessionWindowSecs = 18_000;
+    /// <summary><c>limit_window_seconds</c> the API reports for the 7-day window.</summary>
+    private const long WeeklyWindowSecs = 604_800;
+
+    private enum WindowKind { Session, Weekly }
+
     [JsonPropertyName("plan_type")] public string? PlanType { get; set; }
     [JsonPropertyName("rate_limit")] public RateLimit? RateLimit { get; set; }
     [JsonPropertyName("code_review_rate_limit")] public RateLimit? CodeReviewRateLimit { get; set; }
@@ -24,9 +32,7 @@ public sealed class OpenAiUsageResponse
         var planType = PlanType ?? planHint ?? "Unknown";
         var plan = $"ChatGPT {Capitalize(planType)}";
 
-        var rl = RateLimit ?? new RateLimit();
-        var session = WindowOrDefault(rl.PrimaryWindow, TimeSpan.FromHours(5));
-        var weekly = WindowOrDefault(rl.SecondaryWindow, TimeSpan.FromDays(7));
+        var (session, weekly) = ClassifyRateLimit(RateLimit ?? new RateLimit());
         UsageWindow? codeReview = CodeReviewRateLimit?.PrimaryWindow is { } cw
             ? ToWindow(cw, TimeSpan.FromDays(7)) : null;
 
@@ -35,11 +41,63 @@ public sealed class OpenAiUsageResponse
                 RangeFromList(c.ApproxLocalMessages), RangeFromList(c.ApproxCloudMessages))
             : null;
 
-        return new OpenAiSnapshot(plan, session, weekly, codeReview, credits, OpenAiSource.CodexOauth);
+        return new OpenAiSnapshot(
+            plan,
+            session ?? new UsageWindow(0, null, TimeSpan.FromSeconds(SessionWindowSecs)),
+            weekly ?? new UsageWindow(0, null, TimeSpan.FromSeconds(WeeklyWindowSecs)),
+            codeReview, credits, OpenAiSource.CodexOauth);
     }
 
-    private static UsageWindow WindowOrDefault(OpenAiWindow? w, TimeSpan def) =>
-        w is null ? new UsageWindow(0, null, def) : ToWindow(w, def);
+    /// <summary>
+    /// Classify each window by its reported <c>limit_window_seconds</c> rather
+    /// than its wire position — OpenAI has shipped payloads where the 7-day
+    /// window arrives in <c>primary_window</c> with <c>secondary_window</c>
+    /// omitted (openai/codex#32707), which would otherwise be mislabeled as the
+    /// 5-hour session window. Wire position is only a fallback for a window
+    /// whose duration doesn't match either known constant.
+    /// </summary>
+    private static (UsageWindow? Session, UsageWindow? Weekly) ClassifyRateLimit(RateLimit rl)
+    {
+        UsageWindow? session = null;
+        UsageWindow? weekly = null;
+
+        void Insert(OpenAiWindow? wire, WindowKind fallbackKind)
+        {
+            if (wire is null) return;
+            var kind = ClassifyKind(wire) ?? fallbackKind;
+            var defaultDuration = TimeSpan.FromSeconds(
+                kind == WindowKind.Session ? SessionWindowSecs : WeeklyWindowSecs);
+            var window = ToWindow(wire, defaultDuration);
+            if (kind == WindowKind.Session)
+            {
+                if (session is not null) throw DuplicateWindowError(kind, wire.LimitWindowSeconds);
+                session = window;
+            }
+            else
+            {
+                if (weekly is not null) throw DuplicateWindowError(kind, wire.LimitWindowSeconds);
+                weekly = window;
+            }
+        }
+
+        Insert(rl.PrimaryWindow, WindowKind.Session);
+        Insert(rl.SecondaryWindow, WindowKind.Weekly);
+        return (session, weekly);
+    }
+
+    private static WindowKind? ClassifyKind(OpenAiWindow w) => w.LimitWindowSeconds switch
+    {
+        SessionWindowSecs => WindowKind.Session,
+        WeeklyWindowSecs => WindowKind.Weekly,
+        _ => null,
+    };
+
+    private static SchemaException DuplicateWindowError(WindowKind kind, long seconds)
+    {
+        var label = kind == WindowKind.Session ? "5h" : "7d";
+        return new SchemaException(
+            $"duplicate OpenAI {label} window with limit_window_seconds={seconds}; expected at most one 5h and one 7d window");
+    }
 
     private static UsageWindow ToWindow(OpenAiWindow w, TimeSpan def)
     {

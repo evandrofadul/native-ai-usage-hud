@@ -1,4 +1,5 @@
 using System.Text;
+using AiUsageHud.Core.Errors;
 using AiUsageHud.Core.Vendors.Anthropic;
 using AiUsageHud.Core.Vendors.Copilot;
 using AiUsageHud.Core.Vendors.Gemini;
@@ -26,7 +27,7 @@ public class VendorTypesTests
         Assert.Equal(43, snap.Session.UtilizationPct);
         Assert.Equal(27, snap.Weekly.UtilizationPct);
         Assert.Equal(4, snap.Sonnet!.Value.UtilizationPct);
-        Assert.Equal(5000, snap.Extra!.Value.Limit.Value);
+        Assert.Equal(5000, snap.Extra!.Value.Limit!.Value.Value);
         Assert.Equal(250, snap.Extra.Value.Spent.Value);
         Assert.NotNull(snap.Session.ResetsAt);
     }
@@ -92,6 +93,63 @@ public class VendorTypesTests
     private static OauthCreds ParseCreds(string sub, string tier) =>
         new() { SubscriptionType = sub, RateLimitTier = tier };
 
+    [Fact]
+    public void AnthropicExtraUsageWithNullLimitKeepsSpendVisibleInItsCurrency()
+    {
+        // Issue #30: `monthly_limit: null` means "no cap" (e.g. Claude Pro), not
+        // drift — the real credit spend must stay visible, in its own currency.
+        var snap = AnthropicUsageResponse.Parse(B("""
+            {"five_hour":{"utilization":0},"seven_day":{"utilization":0},
+             "extra_usage":{"is_enabled":true,"monthly_limit":null,
+                "used_credits":14157.0,"currency":"BRL","decimal_places":2}}
+            """)).ToSnapshot("Pro");
+
+        var extra = snap.Extra!.Value;
+        Assert.Null(extra.Limit);
+        Assert.Equal(14157, extra.Spent.Value);
+        Assert.Equal(0, extra.Percent()); // no denominator → no invented percentage
+        Assert.Equal("R$141.57", extra.FmtSpent());
+        Assert.Null(extra.FmtLimit());
+    }
+
+    [Fact]
+    public void AnthropicExtraUsageWithoutSpendIsDropped()
+    {
+        var snap = AnthropicUsageResponse.Parse(B("""
+            {"five_hour":{"utilization":0},"seven_day":{"utilization":0},
+             "extra_usage":{"is_enabled":true,"monthly_limit":5000}}
+            """)).ToSnapshot("Pro");
+        Assert.Null(snap.Extra);
+    }
+
+    [Fact]
+    public void AnthropicExtraUsageLegacyPayloadFormatsAsDollars()
+    {
+        var snap = AnthropicUsageResponse.Parse(B("""
+            {"five_hour":{"utilization":0},"seven_day":{"utilization":0},
+             "extra_usage":{"is_enabled":true,"monthly_limit":5000,"used_credits":250}}
+            """)).ToSnapshot("Pro");
+        var extra = snap.Extra!.Value;
+        Assert.Equal("$2.50", extra.FmtSpent());
+        Assert.Equal("$50.00", extra.FmtLimit());
+    }
+
+    [Fact]
+    public void AnthropicImplausibleDecimalPlacesFailsParse()
+    {
+        Assert.Throws<System.Text.Json.JsonException>(() => AnthropicUsageResponse.Parse(B("""
+            {"extra_usage":{"is_enabled":true,"used_credits":250,"decimal_places":100}}
+            """)));
+    }
+
+    [Fact]
+    public void AnthropicNonIsoCurrencyFailsParse()
+    {
+        Assert.Throws<System.Text.Json.JsonException>(() => AnthropicUsageResponse.Parse(B("""
+            {"extra_usage":{"is_enabled":true,"used_credits":250,"currency":"nope"}}
+            """)));
+    }
+
     // ---- OpenAI ----
 
     [Fact]
@@ -141,6 +199,45 @@ public class VendorTypesTests
         var snap = OpenAiUsageResponse.Parse(B(
             """{"credits":{"balance":1.5,"has_credits":true,"unlimited":false}}""")).ToSnapshot(null);
         Assert.Equal("$1.50", snap.Credits!.Balance);
+    }
+
+    [Fact]
+    public void OpenAiWeeklyOnlyPrimaryWindowIsNotMislabeledAsSession()
+    {
+        // openai/codex#32707: the API has shipped the 7-day window in
+        // `primary_window` with `secondary_window` omitted. Classification must
+        // key off the reported duration, not the wire position.
+        var snap = OpenAiUsageResponse.Parse(B("""
+            {"rate_limit":{
+              "primary_window":{"used_percent":41,"limit_window_seconds":604800},
+              "secondary_window":null}}
+            """)).ToSnapshot(null);
+        Assert.Equal(41, snap.Weekly.UtilizationPct);
+        Assert.Equal(TimeSpan.FromDays(7), snap.Weekly.WindowDuration);
+        Assert.Equal(0, snap.Session.UtilizationPct); // no session window reported
+    }
+
+    [Fact]
+    public void OpenAiDuplicateWindowKindFailsParse()
+    {
+        var snap = OpenAiUsageResponse.Parse(B("""
+            {"rate_limit":{
+              "primary_window":{"used_percent":41,"limit_window_seconds":604800},
+              "secondary_window":{"used_percent":7,"limit_window_seconds":604800}}}
+            """));
+        Assert.Throws<SchemaException>(() => snap.ToSnapshot(null));
+    }
+
+    [Fact]
+    public void OpenAiUnrecognizedDurationFallsBackToWirePosition()
+    {
+        var snap = OpenAiUsageResponse.Parse(B("""
+            {"rate_limit":{
+              "primary_window":{"used_percent":10,"limit_window_seconds":3600},
+              "secondary_window":{"used_percent":20,"limit_window_seconds":3600}}}
+            """)).ToSnapshot(null);
+        Assert.Equal(10, snap.Session.UtilizationPct);
+        Assert.Equal(20, snap.Weekly.UtilizationPct);
     }
 
     [Fact]

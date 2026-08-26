@@ -98,14 +98,14 @@ public sealed class CopilotFetcher : IVendorFetcher
 
     private VendorOutcome FallbackSilent()
     {
-        var bytes = _cache.MaybePayload()
+        var bytes = _cache.FallbackPayload(Cache.MaxStale)
             ?? throw new TransportException("copilot: no cache and network unreachable");
         return Reuse(bytes, true);
     }
 
     private VendorOutcome FallbackWithError((int, string) lastError)
     {
-        var bytes = _cache.MaybePayload() ?? throw new OtherException("copilot: no usable cache");
+        var bytes = _cache.FallbackPayload(Cache.MaxStale) ?? throw new OtherException("copilot: no usable cache");
         var outcome = Reuse(bytes, true);
         return outcome with { LastError = lastError };
     }

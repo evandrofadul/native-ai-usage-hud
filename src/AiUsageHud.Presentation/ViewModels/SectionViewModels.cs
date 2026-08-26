@@ -198,13 +198,17 @@ public static class SectionBuilder
         if (s.Extra is { } e)
         {
             var pct = Math.Clamp(e.Percent(), 0, 100);
+            // A null limit means an uncapped plan (e.g. Claude Pro) reported no
+            // spending cap — the spend is still real and stays visible, but
+            // there is no denominator to compute a percentage against.
+            var limitLabel = e.FmtLimit();
             v.Add(new MetricSectionVm
             {
                 Label = "Extra usage",
                 Pct = pct,
                 Severity = SeverityRules.SeverityFor(pct),
-                ValueLabel = $"{e.Spent.FormatDollars()} of {e.Limit.FormatDollars()}",
-                Footnote = $"{pct}% of monthly limit consumed",
+                ValueLabel = limitLabel is null ? e.FmtSpent() : $"{e.FmtSpent()} of {limitLabel}",
+                Footnote = limitLabel is null ? "no monthly limit reported" : $"{pct}% of monthly limit consumed",
             });
         }
         return v;

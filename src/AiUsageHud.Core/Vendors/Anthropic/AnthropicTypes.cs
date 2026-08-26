@@ -25,8 +25,17 @@ public sealed class AnthropicUsageResponse
         var session = ToWindow(FiveHour, TimeSpan.FromHours(5));
         var weekly = ToWindow(SevenDay, TimeSpan.FromDays(7));
         UsageWindow? sonnet = SevenDaySonnet is null ? null : ToWindow(SevenDaySonnet, TimeSpan.FromDays(7));
-        ExtraUsage? extra = ExtraUsage is { IsEnabled: true } e
-            ? new ExtraUsage(new Cents(e.MonthlyLimit), new Cents(e.UsedCredits))
+        // `used_credits` is the essential datum: without it there is nothing
+        // truthful to display. `monthly_limit: null` is semantic, not drift —
+        // the endpoint sends it for plans with no spending cap (e.g. Claude
+        // Pro) — so it stays a separate, non-fatal absence rather than
+        // discarding real credit spend along with it.
+        ExtraUsage? extra = ExtraUsage is { IsEnabled: true, UsedCredits: { } spent } e
+            ? new ExtraUsage(
+                e.MonthlyLimit is { } limit ? new Cents(limit) : null,
+                new Cents(spent),
+                e.Currency,
+                e.DecimalPlaces)
             : null;
         return new AnthropicSnapshot(planLabel, session, weekly, sonnet, extra);
     }
@@ -54,11 +63,25 @@ public sealed class ExtraUsageBlock
 {
     [JsonPropertyName("is_enabled")] public bool IsEnabled { get; set; }
 
+    /// <summary>Null for plans with no spending cap — semantic, not drift.</summary>
     [JsonPropertyName("monthly_limit")]
-    [JsonConverter(typeof(LenientLongConverter))]
-    public long MonthlyLimit { get; set; }
+    [JsonConverter(typeof(LenientNullableLongConverter))]
+    public long? MonthlyLimit { get; set; }
 
     [JsonPropertyName("used_credits")]
-    [JsonConverter(typeof(LenientLongConverter))]
-    public long UsedCredits { get; set; }
+    [JsonConverter(typeof(LenientNullableLongConverter))]
+    public long? UsedCredits { get; set; }
+
+    /// <summary>ISO currency code ("BRL", "USD", …). Absent on older payloads,
+    /// which format as <c>$</c> for back-compat.</summary>
+    [JsonPropertyName("currency")]
+    [JsonConverter(typeof(IsoCurrencyConverter))]
+    public string? Currency { get; set; }
+
+    /// <summary>Minor-unit digits (BRL/USD = 2, JPY/KRW = 0). Null means the
+    /// wire did not report the scale — we don't guess it from the currency
+    /// code alone.</summary>
+    [JsonPropertyName("decimal_places")]
+    [JsonConverter(typeof(LenientDecimalPlacesConverter))]
+    public int? DecimalPlaces { get; set; }
 }

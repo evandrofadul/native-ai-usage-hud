@@ -12,6 +12,13 @@ public sealed class Cache
     /// <summary>Default TTL — claudebar's CACHE_TTL=60s.</summary>
     public static readonly TimeSpan DefaultTtl = TimeSpan.FromSeconds(60);
 
+    /// <summary>
+    /// Oldest a cached payload may be and still be served on a failure path.
+    /// Beyond this the caller must surface the real error instead of presenting
+    /// week-old numbers as if they were current.
+    /// </summary>
+    public static readonly TimeSpan MaxStale = TimeSpan.FromDays(7);
+
     private readonly string _dir;
 
     public Cache(string dir) => _dir = dir;
@@ -47,9 +54,26 @@ public sealed class Cache
         return rawAge >= TimeSpan.Zero && rawAge < ttl ? File.ReadAllBytes(PayloadPath) : null;
     }
 
-    /// <summary>Read the payload regardless of age; null if it doesn't exist.</summary>
+    /// <summary>
+    /// Read the payload regardless of age; null if it doesn't exist. Prefer
+    /// <see cref="FallbackPayload"/> on failure paths — this one imposes no age
+    /// limit, so it will happily hand back a month-old figure.
+    /// </summary>
     public byte[]? MaybePayload() =>
         File.Exists(PayloadPath) ? File.ReadAllBytes(PayloadPath) : null;
+
+    /// <summary>
+    /// Payload for the failure path: the last good value, but only while it is
+    /// still worth showing. Beyond <paramref name="maxStale"/> this returns null
+    /// so the caller surfaces the real error instead of presenting week-old
+    /// numbers as if they were current.
+    /// </summary>
+    public byte[]? FallbackPayload(TimeSpan maxStale)
+    {
+        var age = PayloadAge();
+        if (age is null || age > maxStale) return null;
+        return File.ReadAllBytes(PayloadPath);
+    }
 
     /// <summary>Atomically write a new payload; clears stale + last-error markers.</summary>
     public void WritePayload(byte[] bytes)

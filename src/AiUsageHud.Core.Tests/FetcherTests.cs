@@ -108,6 +108,44 @@ public class FetcherTests : IDisposable
     }
 
     [Fact]
+    public async Task AnthropicStaleCacheOlderThanMaxStaleSurfacesError()
+    {
+        var cache = NewCache("anthropic");
+        cache.WritePayload(Encoding.UTF8.GetBytes("""
+            {"five_hour":{"utilization":12},"seven_day":{"utilization":5}}
+            """));
+        // Beyond MAX_STALE (7 days): the failure path must surface the real
+        // error instead of presenting week-old numbers as current.
+        File.SetLastWriteTimeUtc(cache.PayloadPath, DateTime.UtcNow.AddDays(-8));
+        var handler = new FakeHttpHandler().On("/api/oauth/usage", HttpStatusCode.TooManyRequests,
+            """{"error":{"type":"rate_limit_error","message":"slow down"}}""");
+        var fetcher = new AnthropicFetcher(handler.Client(), WriteAnthropicCreds(), cache,
+            TimeSpan.Zero, "https://fake.local/api/oauth/usage", "https://fake.local/v1/oauth/token");
+
+        await Assert.ThrowsAsync<OtherException>(() => fetcher.FetchAsync());
+    }
+
+    [Fact]
+    public async Task AnthropicCorruptFreshCacheFallsThroughToLiveFetch()
+    {
+        var cache = NewCache("anthropic");
+        // Fresh (within TTL) but unparseable — must not render as a zeroed
+        // "Unknown" snapshot; it should fall through to a live fetch.
+        cache.WritePayload(Encoding.UTF8.GetBytes("not json"));
+        var handler = new FakeHttpHandler().On("/api/oauth/usage", HttpStatusCode.OK, """
+            {"five_hour":{"utilization":33},"seven_day":{"utilization":9}}
+            """);
+        var fetcher = new AnthropicFetcher(handler.Client(), WriteAnthropicCreds(), cache,
+            TimeSpan.FromSeconds(60), "https://fake.local/api/oauth/usage", "https://fake.local/v1/oauth/token");
+
+        var outcome = await fetcher.FetchAsync();
+        var snap = (Core.Models.AnthropicSnapshot)outcome.Snapshot;
+        Assert.Equal(33, snap.Session.UtilizationPct);
+        Assert.False(outcome.Stale);
+        Assert.NotEmpty(handler.Requests);
+    }
+
+    [Fact]
     public async Task CopilotLiveFetchAndStaleFallback()
     {
         var cache = NewCache("copilot");

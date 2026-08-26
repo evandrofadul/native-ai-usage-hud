@@ -46,9 +46,12 @@ public sealed class AnthropicFetcher : IVendorFetcher
         var creds = AnthropicCreds.ReadFrom(_credsPath);
         var planLabel = creds.PlanLabel();
 
-        // Fast path: fresh cache.
+        // Fast path: fresh cache — but a corrupt payload falls through to a live
+        // fetch rather than being rendered as a zeroed "Unknown" snapshot for the
+        // rest of the TTL.
         var fresh = _cache.FreshPayload(_ttl);
-        if (fresh is not null) return ReuseCache(fresh, planLabel, stale: false);
+        if (fresh is not null && TryParseSnapshot(fresh, planLabel, out var freshSnap))
+            return new VendorOutcome(freshSnap, false, _cache.ReadLastError(), _cache.PayloadAge());
 
         // Maybe refresh.
         var nowSecs = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -130,24 +133,22 @@ public sealed class AnthropicFetcher : IVendorFetcher
         throw new HttpStatusException((int)resp.StatusCode, msg);
     }
 
-    private VendorOutcome ReuseCache(byte[] bytes, string planLabel, bool stale)
+    private static bool TryParseSnapshot(byte[] bytes, string planLabel, out AnthropicSnapshot snap)
     {
-        AnthropicSnapshot snap;
-        try { snap = AnthropicUsageResponse.Parse(bytes).ToSnapshot(planLabel); }
-        catch { snap = new AnthropicUsageResponse().ToSnapshot("Unknown"); }
-        return new VendorOutcome(snap, stale, _cache.ReadLastError(), _cache.PayloadAge());
+        try { snap = AnthropicUsageResponse.Parse(bytes).ToSnapshot(planLabel); return true; }
+        catch { snap = null!; return false; }
     }
 
     private VendorOutcome FallbackToCache(string planLabel, (int, string) lastError)
     {
-        var bytes = _cache.MaybePayload() ?? throw new OtherException("no usable cache");
+        var bytes = _cache.FallbackPayload(Cache.MaxStale) ?? throw new OtherException("no usable cache");
         var snap = AnthropicUsageResponse.Parse(bytes).ToSnapshot(planLabel);
         return new VendorOutcome(snap, true, lastError, _cache.PayloadAge());
     }
 
     private VendorOutcome FallbackToCacheSilent(string planLabel)
     {
-        var bytes = _cache.MaybePayload()
+        var bytes = _cache.FallbackPayload(Cache.MaxStale)
             ?? throw new TransportException("no cache and network unreachable");
         var snap = AnthropicUsageResponse.Parse(bytes).ToSnapshot(planLabel);
         return new VendorOutcome(snap, true, _cache.ReadLastError(), _cache.PayloadAge());
@@ -155,7 +156,7 @@ public sealed class AnthropicFetcher : IVendorFetcher
 
     private VendorOutcome HandleAuthFailure(string planLabel, bool transient)
     {
-        var bytes = _cache.MaybePayload();
+        var bytes = _cache.FallbackPayload(Cache.MaxStale);
         if (bytes is null)
         {
             throw transient

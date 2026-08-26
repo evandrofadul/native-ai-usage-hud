@@ -45,8 +45,11 @@ public sealed class OpenAiFetcher : IVendorFetcher
         var auth = OpenAiCreds.ReadFrom(_credsPath);
         var planHint = auth.Tokens.PlanTypeFromIdToken();
 
+        // A corrupt fresh payload falls through to a live fetch rather than
+        // being rendered as a zeroed snapshot for the rest of the TTL.
         var fresh = _cache.FreshPayload(_ttl);
-        if (fresh is not null) return Reuse(fresh, stale: false, planHint);
+        if (fresh is not null && TryParseSnapshot(fresh, planHint, out var freshSnap))
+            return new VendorOutcome(freshSnap, false, _cache.ReadLastError(), _cache.PayloadAge());
 
         var nowSecs = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         if (OpenAiOAuth.NeedsRefresh(auth.Tokens.ExpiresAtSecs, nowSecs))
@@ -115,31 +118,35 @@ public sealed class OpenAiFetcher : IVendorFetcher
         return bytes;
     }
 
+    private static bool TryParseSnapshot(byte[] bytes, string? planHint, out OpenAiSnapshot snap)
+    {
+        try { snap = OpenAiUsageResponse.Parse(bytes).ToSnapshot(planHint); return true; }
+        catch { snap = null!; return false; }
+    }
+
     private VendorOutcome Reuse(byte[] bytes, bool stale, string? planHint)
     {
-        OpenAiSnapshot snap;
-        try { snap = OpenAiUsageResponse.Parse(bytes).ToSnapshot(planHint); }
-        catch { snap = new OpenAiUsageResponse().ToSnapshot(planHint); }
+        var snap = OpenAiUsageResponse.Parse(bytes).ToSnapshot(planHint);
         return new VendorOutcome(snap, stale, _cache.ReadLastError(), _cache.PayloadAge());
     }
 
     private VendorOutcome Fallback(string? planHint, (int, string) lastError)
     {
-        var bytes = _cache.MaybePayload() ?? throw new OtherException("openai: no usable cache");
+        var bytes = _cache.FallbackPayload(Cache.MaxStale) ?? throw new OtherException("openai: no usable cache");
         var outcome = Reuse(bytes, true, planHint);
         return outcome with { LastError = lastError };
     }
 
     private VendorOutcome FallbackSilent(string? planHint)
     {
-        var bytes = _cache.MaybePayload()
+        var bytes = _cache.FallbackPayload(Cache.MaxStale)
             ?? throw new TransportException("openai: no cache and network unreachable");
         return Reuse(bytes, true, planHint);
     }
 
     private VendorOutcome HandleAuthFailure(string? planHint, bool transient)
     {
-        var bytes = _cache.MaybePayload();
+        var bytes = _cache.FallbackPayload(Cache.MaxStale);
         if (bytes is null)
         {
             throw transient
