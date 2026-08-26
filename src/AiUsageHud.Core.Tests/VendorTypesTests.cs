@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using AiUsageHud.Core.Errors;
 using AiUsageHud.Core.Vendors.Anthropic;
 using AiUsageHud.Core.Vendors.Copilot;
@@ -72,13 +73,32 @@ public class VendorTypesTests
     }
 
     [Fact]
-    public void AnthropicUtilizationClampsToHundred()
+    public void AnthropicBenignOvershootSaturatesToHundred()
     {
+        // A hair over the cap is rounding noise, not drift — it must render as
+        // a full bar, not fail the parse.
         var snap = AnthropicUsageResponse.Parse(B("""
-            {"five_hour":{"utilization":127.4},"seven_day":{"utilization":-5}}
+            {"five_hour":{"utilization":100.4},"seven_day":{"utilization":100.6}}
             """)).ToSnapshot("Pro");
         Assert.Equal(100, snap.Session.UtilizationPct);
-        Assert.Equal(0, snap.Weekly.UtilizationPct);
+        Assert.Equal(100, snap.Weekly.UtilizationPct); // rounds to 101, saturated
+    }
+
+    [Fact]
+    public void AnthropicOutOfRangeUtilizationIsRejectedNotClamped()
+    {
+        // A value this far outside 0..100 is schema drift — clamping it would
+        // render a confident bar for a number the API never really sent as a
+        // percentage.
+        foreach (var raw in new[]
+        {
+            """{"five_hour":{"utilization":500}}""",
+            """{"five_hour":{"utilization":-1}}""",
+            """{"seven_day":{"utilization":101.5}}""",
+        })
+        {
+            Assert.Throws<JsonException>(() => AnthropicUsageResponse.Parse(B(raw)));
+        }
     }
 
     [Fact]
@@ -182,6 +202,56 @@ public class VendorTypesTests
         Assert.Equal("$2.50", snap.Credits!.Balance);
         Assert.Equal((100L, 200L), snap.Credits.ApproxLocalMessages);
         Assert.Equal((40L, 60L), snap.Credits.ApproxCloudMessages);
+    }
+
+    [Fact]
+    public void OpenAiCountersAcceptIntFloatAndNumericString()
+    {
+        var snap = OpenAiUsageResponse.Parse(B("""
+            {"rate_limit":{"primary_window":{"used_percent":"42","limit_window_seconds":"18000.9"}}}
+            """)).ToSnapshot(null);
+        Assert.Equal(42, snap.Session.UtilizationPct);
+        Assert.Equal(TimeSpan.FromSeconds(18000), snap.Session.WindowDuration);
+    }
+
+    [Fact]
+    public void OpenAiNullOrNonNumericCounterFailsParse()
+    {
+        foreach (var raw in new[]
+        {
+            """{"rate_limit":{"primary_window":{"used_percent":null,"limit_window_seconds":1}}}""",
+            """{"rate_limit":{"primary_window":{"used_percent":"n/a","limit_window_seconds":1}}}""",
+            """{"rate_limit":{"primary_window":{"used_percent":true,"limit_window_seconds":1}}}""",
+        })
+        {
+            // A drifted counter must fail the whole response, not cache a
+            // fabricated 0% bar.
+            Assert.Throws<JsonException>(() => OpenAiUsageResponse.Parse(B(raw)));
+        }
+    }
+
+    [Fact]
+    public void OpenAiOmittedCountersStillDefaultToZero()
+    {
+        // Deliberate boundary: an *absent* counter defaults to 0 like any other
+        // missing field. Only a present-but-wrong value counts as drift.
+        var snap = OpenAiUsageResponse.Parse(B("{}")).ToSnapshot(null);
+        Assert.Equal(0, snap.Session.UtilizationPct);
+    }
+
+    [Fact]
+    public void OpenAiOversizedWindowSecondsDegradesInsteadOfThrowing()
+    {
+        // i64::MAX is a valid integer, so it clears the counter gate — but
+        // TimeSpan.FromSeconds throws OverflowException on it, and a crashing
+        // fetch must degrade to the default duration instead of failing outright.
+        var snap = OpenAiUsageResponse.Parse(B("""
+            {"rate_limit":{"primary_window":{
+              "used_percent":1,"limit_window_seconds":9223372036854775807,
+              "reset_after_seconds":9223372036854775807}}}
+            """)).ToSnapshot(null);
+        Assert.Equal(TimeSpan.FromHours(5), snap.Session.WindowDuration);
+        Assert.Null(snap.Session.ResetsAt);
     }
 
     [Fact]

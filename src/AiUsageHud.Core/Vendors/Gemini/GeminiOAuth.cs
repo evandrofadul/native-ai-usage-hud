@@ -1,6 +1,8 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AiUsageHud.Core.Errors;
+using AiUsageHud.Core.Http;
 using AiUsageHud.Core.Json;
 
 namespace AiUsageHud.Core.Vendors.Gemini;
@@ -53,7 +55,7 @@ public static class GeminiOAuth
         catch (HttpRequestException e) { throw new TransportException(e.Message); }
         catch (TaskCanceledException e) { throw new TransportException(e.Message); }
 
-        var body = await resp.Content.ReadAsStringAsync(ct);
+        var body = Encoding.UTF8.GetString(await CappedBody.ReadAsync(resp.Content, ct));
         if (!resp.IsSuccessStatusCode)
         {
             var msg = Anthropic.AnthropicOAuth.ParseErrorBody(body) ?? "Refresh failed";

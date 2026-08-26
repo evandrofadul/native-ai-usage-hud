@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using AiUsageHud.Core.Abstractions;
 using AiUsageHud.Core.Caching;
 using AiUsageHud.Core.Errors;
+using AiUsageHud.Core.Http;
 using AiUsageHud.Core.Json;
 using AiUsageHud.Core.Models;
 
@@ -142,7 +143,7 @@ public sealed class GeminiFetcher : IVendorFetcher
         try { resp = await _client.SendAsync(req, ct); }
         catch (HttpRequestException e) { throw new TransportException(e.Message); }
 
-        var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+        var bytes = await CappedBody.ReadAsync(resp.Content, ct);
         if (resp.IsSuccessStatusCode) return bytes;
 
         var body = Anthropic.AnthropicOAuth.ParseErrorBody(System.Text.Encoding.UTF8.GetString(bytes))

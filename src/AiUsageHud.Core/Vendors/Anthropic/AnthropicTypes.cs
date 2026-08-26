@@ -55,7 +55,10 @@ public sealed class AnthropicUsageResponse
 
 public sealed class AnthropicWindow
 {
-    [JsonPropertyName("utilization")] public double Utilization { get; set; }
+    [JsonPropertyName("utilization")]
+    [JsonConverter(typeof(StrictPercentConverter))]
+    public double Utilization { get; set; }
+
     [JsonPropertyName("resets_at")] public string? ResetsAt { get; set; }
 }
 

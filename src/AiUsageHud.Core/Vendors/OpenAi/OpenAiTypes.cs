@@ -101,13 +101,37 @@ public sealed class OpenAiUsageResponse
 
     private static UsageWindow ToWindow(OpenAiWindow w, TimeSpan def)
     {
-        var dur = w.LimitWindowSeconds > 0 ? TimeSpan.FromSeconds(w.LimitWindowSeconds) : def;
+        var dur = w.LimitWindowSeconds > 0 ? (SafeFromSeconds(w.LimitWindowSeconds) ?? def) : def;
         DateTimeOffset? reset = w.ResetAt is { } secs
-            ? DateTimeOffset.FromUnixTimeSeconds(secs)
+            ? SafeFromUnixSeconds(secs)
             : w.ResetAfterSeconds is { } after
-                ? DateTimeOffset.UtcNow + TimeSpan.FromSeconds(after)
+                ? SafeAddSeconds(DateTimeOffset.UtcNow, after)
                 : null;
         return new UsageWindow((int)Math.Clamp(w.UsedPercent, 0, 100), reset, dur);
+    }
+
+    /// <summary>
+    /// <see cref="TimeSpan.FromSeconds(long)"/> throws well before <see cref="long"/>'s
+    /// range (TimeSpan tops out around 10,675,199 days). An absurd but
+    /// validly-numeric counter must degrade to the caller's default duration,
+    /// not crash the fetch.
+    /// </summary>
+    private static TimeSpan? SafeFromSeconds(long seconds)
+    {
+        try { return TimeSpan.FromSeconds(seconds); }
+        catch (Exception e) when (e is OverflowException or ArgumentOutOfRangeException) { return null; }
+    }
+
+    private static DateTimeOffset? SafeFromUnixSeconds(long secs)
+    {
+        try { return DateTimeOffset.FromUnixTimeSeconds(secs); }
+        catch (Exception e) when (e is OverflowException or ArgumentOutOfRangeException) { return null; }
+    }
+
+    private static DateTimeOffset? SafeAddSeconds(DateTimeOffset from, long seconds)
+    {
+        try { return SafeFromSeconds(seconds) is { } d ? from + d : null; }
+        catch (Exception e) when (e is OverflowException or ArgumentOutOfRangeException) { return null; }
     }
 
     private static (long, long)? RangeFromList(List<long>? v)
@@ -129,11 +153,11 @@ public sealed class RateLimit
 public sealed class OpenAiWindow
 {
     [JsonPropertyName("used_percent")]
-    [JsonConverter(typeof(LenientLongConverter))]
+    [JsonConverter(typeof(StrictCounterConverter))]
     public long UsedPercent { get; set; }
 
     [JsonPropertyName("limit_window_seconds")]
-    [JsonConverter(typeof(LenientLongConverter))]
+    [JsonConverter(typeof(StrictCounterConverter))]
     public long LimitWindowSeconds { get; set; }
 
     [JsonPropertyName("reset_at")]

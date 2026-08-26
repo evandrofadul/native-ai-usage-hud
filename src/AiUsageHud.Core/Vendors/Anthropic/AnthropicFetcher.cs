@@ -1,6 +1,7 @@
 using AiUsageHud.Core.Abstractions;
 using AiUsageHud.Core.Caching;
 using AiUsageHud.Core.Errors;
+using AiUsageHud.Core.Http;
 using AiUsageHud.Core.Models;
 
 namespace AiUsageHud.Core.Vendors.Anthropic;
@@ -119,7 +120,7 @@ public sealed class AnthropicFetcher : IVendorFetcher
         try { resp = await _client.SendAsync(req, ct); }
         catch (HttpRequestException e) { throw new TransportException(e.Message); }
 
-        var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+        var bytes = await CappedBody.ReadAsync(resp.Content, ct);
         if (resp.IsSuccessStatusCode)
         {
             // Validate it parses as a usage shape.
