@@ -39,9 +39,12 @@ public sealed class Cache
     /// <summary>Cached payload only if younger than <paramref name="ttl"/>.</summary>
     public byte[]? FreshPayload(TimeSpan ttl)
     {
-        var age = PayloadAge();
-        if (age is null) return null;
-        return age < ttl ? File.ReadAllBytes(PayloadPath) : null;
+        if (!File.Exists(PayloadPath)) return null;
+        // Raw (unclamped) age: a future mtime (clock skew, DST, a stray file)
+        // must never look "freshly written" — that would pin the cache forever
+        // since a clamped-to-zero age is always < ttl. Treat it as expired instead.
+        var rawAge = DateTime.UtcNow - File.GetLastWriteTimeUtc(PayloadPath);
+        return rawAge >= TimeSpan.Zero && rawAge < ttl ? File.ReadAllBytes(PayloadPath) : null;
     }
 
     /// <summary>Read the payload regardless of age; null if it doesn't exist.</summary>

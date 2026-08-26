@@ -49,6 +49,16 @@ public class CacheTests : IDisposable
     }
 
     [Fact]
+    public void FreshPayloadTreatsFutureMtimeAsExpired()
+    {
+        var c = NewCache();
+        c.WritePayload("x"u8.ToArray());
+        File.SetLastWriteTimeUtc(c.PayloadPath, DateTime.UtcNow.AddDays(4));
+
+        Assert.Null(c.FreshPayload(TimeSpan.FromSeconds(60)));
+    }
+
+    [Fact]
     public void WriteClearsStaleMarkerAndLastError()
     {
         var c = NewCache();
