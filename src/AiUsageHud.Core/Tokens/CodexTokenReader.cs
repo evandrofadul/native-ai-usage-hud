@@ -37,7 +37,7 @@ public sealed class CodexTokenReader
 
         lock (_cache)
         {
-            var active = all.MaxBy(SafeMtime)!;
+            var active = MostRecentFile.Pick(all)!;
             var activeAgg = Parse(active);
             var cwd = activeAgg.Cwd;
 
@@ -81,11 +81,6 @@ public sealed class CodexTokenReader
             var project = string.IsNullOrEmpty(cwd) ? "Codex session" : cwd!;
             return new ProjectTokenUsage(project, session, projectTotal, models);
         }
-    }
-
-    private static long SafeMtime(string path)
-    {
-        try { return File.GetLastWriteTimeUtc(path).Ticks; } catch { return 0; }
     }
 
     private FileAgg Parse(string path)

@@ -36,7 +36,7 @@ public sealed class ClaudeTokenReader
         if (all.Length == 0) return null;
 
         // Active project = the top-level folder owning the most recently touched file.
-        var latest = all.MaxBy(SafeMtime)!;
+        var latest = MostRecentFile.Pick(all)!;
         var rel = Path.GetRelativePath(_projectsDir, latest);
         var project = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
         var projectDir = Path.Combine(_projectsDir, project);
@@ -48,7 +48,7 @@ public sealed class ClaudeTokenReader
             string[] topLevel;
             try { topLevel = Directory.GetFiles(projectDir, "*.jsonl", SearchOption.TopDirectoryOnly); }
             catch { topLevel = []; }
-            var sessionFile = topLevel.Length > 0 ? topLevel.MaxBy(SafeMtime) : latest;
+            var sessionFile = topLevel.Length > 0 ? MostRecentFile.Pick(topLevel) : latest;
 
             var session = sessionFile is null ? default : Parse(sessionFile).Total;
 
@@ -72,11 +72,6 @@ public sealed class ClaudeTokenReader
 
             return new ProjectTokenUsage(project, session, projectTotal, models);
         }
-    }
-
-    private static long SafeMtime(string path)
-    {
-        try { return File.GetLastWriteTimeUtc(path).Ticks; } catch { return 0; }
     }
 
     private FileAgg Parse(string path)

@@ -45,7 +45,7 @@ public sealed class GeminiUsageStatsReader
         if (all.Length == 0) return null;
 
         // The (most recently touched) active project still labels the card's Project.
-        var latest = all.MaxBy(SafeMtime)!;
+        var latest = MostRecentFile.Pick(all)!;
         var rel = Path.GetRelativePath(_tmpDir, latest);
         var project = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
 
@@ -87,11 +87,6 @@ public sealed class GeminiUsageStatsReader
             PeakHour: peakHour,
             FavoriteModel: favorite,
             Heatmap: UsageDayStats.BuildHeatmap(byDay));
-    }
-
-    private static long SafeMtime(string path)
-    {
-        try { return File.GetLastWriteTimeUtc(path).Ticks; } catch { return 0; }
     }
 
     private FileStats Parse(string path)

@@ -47,15 +47,14 @@ public sealed class CodexUsageStatsReader
         if (all.Length == 0) return null;
 
         // The (most recently touched) active workspace still labels the card's Project.
-        var latest = all.MaxBy(SafeMtime)!;
+        var active = MostRecentFile.Pick(all)!;
 
         long totalTokens = 0, messages = 0;
         var byDay = new Dictionary<DateOnly, int>();
         var byHour = new int[24];
         var byModel = new Dictionary<string, int>();
         var sessions = new HashSet<string>();
-        string? activeCwd = null;
-        var latestMtime = long.MinValue;
+        string? activeCwd;
 
         lock (_cache)
         {
@@ -70,11 +69,9 @@ public sealed class CodexUsageStatsReader
                 foreach (var (model, n) in s.ByModel)
                     byModel[model] = byModel.GetValueOrDefault(model) + n;
                 if (s.SessionId is { Length: > 0 } id) sessions.Add(id);
-
-                // Track the cwd of the most recently written rollout for the card label.
-                var mt = SafeMtime(f);
-                if (mt > latestMtime) { latestMtime = mt; activeCwd = s.Cwd; }
             }
+
+            activeCwd = Parse(active).Cwd;
         }
 
         int? peakHour = messages > 0 ? Array.IndexOf(byHour, byHour.Max()) : null;
@@ -93,11 +90,6 @@ public sealed class CodexUsageStatsReader
             PeakHour: peakHour,
             FavoriteModel: favorite,
             Heatmap: UsageDayStats.BuildHeatmap(byDay));
-    }
-
-    private static long SafeMtime(string path)
-    {
-        try { return File.GetLastWriteTimeUtc(path).Ticks; } catch { return 0; }
     }
 
     private FileStats Parse(string path)

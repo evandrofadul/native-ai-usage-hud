@@ -78,6 +78,23 @@ public class ClaudeTokenReaderTests : IDisposable
     }
 
     [Fact]
+    public void AFutureDatedFileDoesNotPermanentlyPinTheActiveProject()
+    {
+        // A stray future mtime (clock skew, a leftover subagent transcript — see the
+        // MrShake incident) must not out-rank genuinely current work just because its
+        // wall-clock timestamp looks "newer". Real, non-future activity should win.
+        var stale = WriteSession("proj-future", "s.jsonl", Assistant("claude-opus-4-8", 5, 5, 0, 0));
+        var real = WriteSession("proj-real", "s.jsonl", Assistant("claude-opus-4-8", 7, 7, 0, 0));
+        File.SetLastWriteTimeUtc(stale, DateTime.UtcNow.AddDays(4));
+        File.SetLastWriteTimeUtc(real, DateTime.UtcNow.AddMinutes(-1));
+
+        var usage = new ClaudeTokenReader(_root).Read();
+
+        Assert.Equal("proj-real", usage!.Project);
+        Assert.Equal(14, usage.Session.Total);
+    }
+
+    [Fact]
     public void ReturnsNullWhenNoProjectsDir()
     {
         var usage = new ClaudeTokenReader(Path.Combine(_root, "does-not-exist")).Read();

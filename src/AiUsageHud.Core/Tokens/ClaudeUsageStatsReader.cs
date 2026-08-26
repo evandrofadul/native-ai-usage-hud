@@ -46,7 +46,7 @@ public sealed class ClaudeUsageStatsReader
         // Entire history: the dashboard aggregates every project's transcripts, not
         // just the active one. The (most recently touched) active project still labels
         // the card's Project field.
-        var latest = all.MaxBy(SafeMtime)!;
+        var latest = MostRecentFile.Pick(all)!;
         var rel = Path.GetRelativePath(_projectsDir, latest);
         var project = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
 
@@ -88,11 +88,6 @@ public sealed class ClaudeUsageStatsReader
             PeakHour: peakHour,
             FavoriteModel: favorite,
             Heatmap: UsageDayStats.BuildHeatmap(byDay));
-    }
-
-    private static long SafeMtime(string path)
-    {
-        try { return File.GetLastWriteTimeUtc(path).Ticks; } catch { return 0; }
     }
 
     private FileStats Parse(string path)

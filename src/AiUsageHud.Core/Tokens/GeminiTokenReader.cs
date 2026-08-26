@@ -36,7 +36,7 @@ public sealed class GeminiTokenReader
         if (all.Length == 0) return null;
 
         // Active project = the top-level folder (under tmp) owning the most recent file.
-        var latest = all.MaxBy(SafeMtime)!;
+        var latest = MostRecentFile.Pick(all)!;
         var rel = Path.GetRelativePath(_tmpDir, latest);
         var project = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
         var projectDir = Path.Combine(_tmpDir, project);
@@ -49,7 +49,7 @@ public sealed class GeminiTokenReader
             string[] topLevel;
             try { topLevel = Directory.GetFiles(chatsDir, "*.jsonl", SearchOption.TopDirectoryOnly); }
             catch { topLevel = []; }
-            var sessionFile = topLevel.Length > 0 ? topLevel.MaxBy(SafeMtime) : latest;
+            var sessionFile = topLevel.Length > 0 ? MostRecentFile.Pick(topLevel) : latest;
 
             var session = sessionFile is null ? default : Parse(sessionFile).Total;
 
@@ -73,11 +73,6 @@ public sealed class GeminiTokenReader
 
             return new ProjectTokenUsage(project, session, projectTotal, models);
         }
-    }
-
-    private static long SafeMtime(string path)
-    {
-        try { return File.GetLastWriteTimeUtc(path).Ticks; } catch { return 0; }
     }
 
     private FileAgg Parse(string path)
