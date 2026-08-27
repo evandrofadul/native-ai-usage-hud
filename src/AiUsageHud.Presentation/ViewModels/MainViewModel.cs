@@ -42,6 +42,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Reads richer Gemini CLI stats (sessions, streaks, heatmap) for the dashboard.</summary>
     private readonly GeminiUsageStatsReader _geminiStats = new();
 
+    /// <summary>Reads richer Antigravity stats (sessions, streaks, heatmap) for the dashboard.</summary>
+    private readonly AntigravityUsageStatsReader _antigravityStats = new();
+
     private AppConfig _config;
     private UsageService _service;
 
@@ -159,6 +162,9 @@ public sealed partial class MainViewModel : ObservableObject
                 case VendorId.Gemini:
                     tab.SetTokens(await Task.Run(() => _geminiTokens.Read()), "Gemini CLI tokens");
                     tab.SetDashboard(await Task.Run(() => _geminiStats.Read()));
+                    break;
+                case VendorId.Antigravity:
+                    tab.SetDashboard(await Task.Run(() => _antigravityStats.Read()));
                     break;
             }
         }

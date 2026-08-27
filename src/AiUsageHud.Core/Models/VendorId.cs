@@ -10,17 +10,19 @@ public enum VendorId
     Openai,
     Copilot,
     Gemini,
+    Antigravity,
 }
 
 public static class VendorIdExtensions
 {
-    /// <summary>Lowercase slug used in config (anthropic/openai/copilot/gemini).</summary>
+    /// <summary>Lowercase slug used in config (anthropic/openai/copilot/gemini/antigravity).</summary>
     public static string Slug(this VendorId id) => id switch
     {
         VendorId.Anthropic => "anthropic",
         VendorId.Openai => "openai",
         VendorId.Copilot => "copilot",
         VendorId.Gemini => "gemini",
+        VendorId.Antigravity => "antigravity",
         _ => "anthropic",
     };
 
@@ -31,6 +33,7 @@ public static class VendorIdExtensions
         VendorId.Openai => "OpenAI",
         VendorId.Copilot => "Copilot",
         VendorId.Gemini => "Gemini",
+        VendorId.Antigravity => "Antigravity",
         _ => "Anthropic",
     };
 
@@ -41,6 +44,7 @@ public static class VendorIdExtensions
         VendorId.Openai,
         VendorId.Copilot,
         VendorId.Gemini,
+        VendorId.Antigravity,
     };
 
     /// <summary>Parse a slug back to a <see cref="VendorId"/>; null if unknown.</summary>
@@ -50,6 +54,7 @@ public static class VendorIdExtensions
         "openai" => VendorId.Openai,
         "copilot" => VendorId.Copilot,
         "gemini" => VendorId.Gemini,
+        "antigravity" => VendorId.Antigravity,
         _ => null,
     };
 }

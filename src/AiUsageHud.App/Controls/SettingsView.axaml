@@ -28,7 +28,7 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <TextBlock Text="Anthropic, OpenAI and Copilot sign in from their own local credential stores — no API keys needed here."
+                <TextBlock Text="Anthropic, OpenAI, Copilot, Gemini and Antigravity connect through local credentials or background services — no API keys needed here."
                            Foreground="{DynamicResource DimBrush}" FontSize="11"
                            TextWrapping="Wrap" Margin="2,0,5,22"/>
 

@@ -13,7 +13,8 @@ public class ConfigTests
         Assert.True(c.IsEnabled(VendorId.Openai));
         Assert.True(c.IsEnabled(VendorId.Copilot));
         Assert.True(c.IsEnabled(VendorId.Gemini));
-        Assert.Equal(4, c.EnabledVendors().Count);
+        Assert.True(c.IsEnabled(VendorId.Antigravity));
+        Assert.Equal(5, c.EnabledVendors().Count);
     }
 
     [Fact]
@@ -60,6 +61,18 @@ public class ConfigTests
     }
 
     [Fact]
+    public void ParsesAntigravitySection()
+    {
+        var c = AppConfig.Parse("""
+            [antigravity]
+            enabled = false
+            language_server_address = "http://127.0.0.1:9090"
+            """);
+        Assert.False(c.IsEnabled(VendorId.Antigravity));
+        Assert.Equal("http://127.0.0.1:9090", c.Antigravity.LanguageServerAddress);
+    }
+
+    [Fact]
     public void GeminiGroupByVariantDefaultsOn()
     {
         Assert.True(new AppConfig().Gemini.GroupByVariant);
@@ -85,9 +98,9 @@ public class ConfigTests
     {
         var c = AppConfig.Parse("""
             [ui]
-            primary = "gemini"
+            primary = "antigravity"
             """);
-        Assert.Equal(VendorId.Gemini, c.Ui.Primary);
+        Assert.Equal(VendorId.Antigravity, c.Ui.Primary);
     }
 
     [Fact]
@@ -99,7 +112,7 @@ public class ConfigTests
     {
         var c = new AppConfig();
         Assert.Equal(
-            new[] { VendorId.Anthropic, VendorId.Openai, VendorId.Copilot, VendorId.Gemini },
+            new[] { VendorId.Anthropic, VendorId.Openai, VendorId.Copilot, VendorId.Gemini, VendorId.Antigravity },
             c.EnabledVendors());
     }
 }

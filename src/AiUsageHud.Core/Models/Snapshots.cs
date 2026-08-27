@@ -142,3 +142,26 @@ public sealed record GeminiSnapshot(
     }
 }
 
+/// <summary>
+/// Google Antigravity — two independent quota pools (Gemini and Claude/GPT-OSS),
+/// each with a 5-hour and a weekly window. Worst-of severity across all four windows.
+/// </summary>
+public sealed record AntigravitySnapshot(
+    string Plan,
+    string Account,
+    UsageWindow Session,
+    UsageWindow Weekly,
+    UsageWindow? ThirdPartySession,
+    UsageWindow? ThirdPartyWeekly) : VendorSnapshot
+{
+    /// <summary>Worst utilization across all four windows.</summary>
+    public PaceSeverity Severity()
+    {
+        var max = Math.Max(Session.UtilizationPct, Weekly.UtilizationPct);
+        if (ThirdPartySession is { } tps && tps.UtilizationPct > max) max = tps.UtilizationPct;
+        if (ThirdPartyWeekly is { } tpw && tpw.UtilizationPct > max) max = tpw.UtilizationPct;
+        return SeverityRules.SeverityFor(max);
+    }
+}
+
+

@@ -166,6 +166,7 @@ public static class SectionBuilder
                     OpenAiSnapshot s => OpenAi(s, now, paceTolerance),
                     CopilotSnapshot s => Copilot(s, now),
                     GeminiSnapshot s => Gemini(s, now, geminiGroupByVariant),
+                    AntigravitySnapshot s => Antigravity(s, now, paceTolerance),
                     _ => [],
                 };
 
@@ -289,6 +290,25 @@ public static class SectionBuilder
                 Footnote = footnote,
             });
         }
+        return v;
+    }
+
+    private static List<SectionVm> Antigravity(AntigravitySnapshot s, DateTimeOffset now, int tol)
+    {
+        var v = new List<SectionVm> { new TitleSectionVm { Left = s.Plan } };
+
+        // Session
+        v.Add(new TextSectionVm { Label = "Session" });
+        PushWindow(v, "Gemini", s.Session, now, tol, false);
+        if (s.ThirdPartySession is { } tpSession)
+            PushWindow(v, "Claude & GPT OSS", tpSession, now, tol, false);
+
+        // Weekly
+        v.Add(new TextSectionVm { Label = "Weekly" });
+        PushWindow(v, "Gemini", s.Weekly, now, tol, false);
+        if (s.ThirdPartyWeekly is { } tpWeekly)
+            PushWindow(v, "Claude & GPT OSS", tpWeekly, now, tol, false);
+
         return v;
     }
 

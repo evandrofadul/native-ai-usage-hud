@@ -3,6 +3,7 @@ using AiUsageHud.Core.Caching;
 using AiUsageHud.Core.Config;
 using AiUsageHud.Core.Models;
 using AiUsageHud.Core.Vendors.Anthropic;
+using AiUsageHud.Core.Vendors.Antigravity;
 using AiUsageHud.Core.Vendors.Copilot;
 using AiUsageHud.Core.Vendors.Gemini;
 using AiUsageHud.Core.Vendors.OpenAi;
@@ -73,6 +74,12 @@ public sealed class UsageService
             Cache.ForVendor("gemini"),
             Cache.DefaultTtl,
             _config.Gemini.ProjectId),
+
+        VendorId.Antigravity => new AntigravityFetcher(
+            _client,
+            Cache.ForVendor("antigravity"),
+            Cache.DefaultTtl,
+            _config.Antigravity.LanguageServerAddress),
 
         _ => throw new ArgumentOutOfRangeException(nameof(vendor)),
     };

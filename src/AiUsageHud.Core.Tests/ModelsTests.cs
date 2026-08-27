@@ -50,4 +50,35 @@ public class ModelsTests
     [Fact]
     public void SeverityPromotesExtraWhenSessionAt100() =>
         Assert.Equal(PaceSeverity.Critical, Snap(100, 50, null, (10000, 9500)).Severity());
+
+    [Fact]
+    public void AntigravitySeverityTracksWorstOfAllFourWindows()
+    {
+        var snap = new AntigravitySnapshot(
+            "Google AI Pro",
+            "acct:test",
+            W(10),
+            W(20),
+            W(30),
+            W(40));
+        Assert.Equal(PaceSeverity.Low, snap.Severity());
+
+        var highSnap = new AntigravitySnapshot(
+            "Google AI Pro",
+            "acct:test",
+            W(10),
+            W(20),
+            W(80),
+            W(40));
+        Assert.Equal(PaceSeverity.High, highSnap.Severity());
+
+        var criticalSnap = new AntigravitySnapshot(
+            "Google AI Pro",
+            "acct:test",
+            W(95),
+            W(20),
+            null,
+            null);
+        Assert.Equal(PaceSeverity.Critical, criticalSnap.Severity());
+    }
 }

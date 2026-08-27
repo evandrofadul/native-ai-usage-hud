@@ -107,6 +107,7 @@ public sealed class VendorToGeometryConverter : IValueConverter
             VendorId.Openai => "IconVendorOpenAI",
             VendorId.Copilot => "IconVendorCopilot",
             VendorId.Gemini => "IconVendorGemini",
+            VendorId.Antigravity => "IconVendorAntigravity",
             _ => null,
         };
         return key is not null && Application.Current is { } app

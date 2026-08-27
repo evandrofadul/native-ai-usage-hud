@@ -101,6 +101,7 @@ public sealed partial class VendorTabViewModel : ObservableObject
             OpenAiSnapshot s => $"{s.Session.UtilizationPct}% · {Core.Pacing.Countdown.Format(s.Session.ResetsAt, now)}",
             CopilotSnapshot s => CopilotTrayLine(s, now),
             GeminiSnapshot s => GeminiTrayLine(s, now),
+            AntigravitySnapshot s => $"{s.Session.UtilizationPct}% · {Core.Pacing.Countdown.Format(s.Session.ResetsAt, now)}",
             _ => null,
         };
     }

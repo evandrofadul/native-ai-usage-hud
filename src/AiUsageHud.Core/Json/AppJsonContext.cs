@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AiUsageHud.Core.Vendors.Anthropic;
+using AiUsageHud.Core.Vendors.Antigravity;
 using AiUsageHud.Core.Vendors.Copilot;
 using AiUsageHud.Core.Vendors.Gemini;
 using AiUsageHud.Core.Vendors.OpenAi;
@@ -49,4 +50,8 @@ namespace AiUsageHud.Core.Json;
 [JsonSerializable(typeof(GeminiQuotaRequest))]
 [JsonSerializable(typeof(GeminiQuotaResponse))]
 [JsonSerializable(typeof(GeminiCacheDto))]
+// Antigravity
+[JsonSerializable(typeof(AntigravityUserStatusResponse))]
+[JsonSerializable(typeof(AntigravityQuotaResponse))]
+[JsonSerializable(typeof(AntigravityCacheDto))]
 internal sealed partial class AppJsonContext : JsonSerializerContext;

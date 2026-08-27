@@ -15,6 +15,7 @@ public sealed class AppConfig
     public OpenAiConfig Openai { get; set; } = new();
     public CopilotConfig Copilot { get; set; } = new();
     public GeminiConfig Gemini { get; set; } = new();
+    public AntigravityConfig Antigravity { get; set; } = new();
 
     public bool IsEnabled(VendorId id) => id switch
     {
@@ -22,6 +23,7 @@ public sealed class AppConfig
         VendorId.Openai => Openai.Enabled,
         VendorId.Copilot => Copilot.Enabled,
         VendorId.Gemini => Gemini.Enabled,
+        VendorId.Antigravity => Antigravity.Enabled,
         _ => false,
     };
 
@@ -80,6 +82,13 @@ public sealed class AppConfig
             cfg.Gemini.CredentialsPath = GetString(gT, "credentials_path");
             cfg.Gemini.ProjectId = GetString(gT, "project_id");
             cfg.Gemini.GroupByVariant = GetBool(gT, "group_by_variant", true);
+        }
+
+        if (Section(model, "antigravity") is { } agT)
+        {
+            cfg.Antigravity.Enabled = GetBool(agT, "enabled", true);
+            cfg.Antigravity.LanguageServerAddress = GetString(agT, "language_server_address")
+                ?? GetString(agT, "ls_address");
         }
 
         return cfg;
@@ -166,4 +175,15 @@ public sealed class GeminiConfig
     /// When false, every individual model is listed.
     /// </summary>
     public bool GroupByVariant { get; set; } = true;
+}
+
+public sealed class AntigravityConfig
+{
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Optional explicit loopback base URL (e.g. <c>http://127.0.0.1:8000</c>).
+    /// If omitted, active local language servers are auto-discovered from running processes.
+    /// </summary>
+    public string? LanguageServerAddress { get; set; }
 }
