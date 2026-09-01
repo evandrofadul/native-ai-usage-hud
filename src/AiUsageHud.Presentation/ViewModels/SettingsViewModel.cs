@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using AiUsageHud.Core.Config;
 using AiUsageHud.Core.Models;
 using AiUsageHud.Presentation.Theming;
@@ -7,13 +8,15 @@ using CommunityToolkit.Mvvm.Input;
 namespace AiUsageHud.Presentation.ViewModels;
 
 /// <summary>
-/// Settings dialog — pick the primary vendor and the color theme. Every vendor
-/// (Anthropic, OpenAI, Copilot, Gemini) authenticates from its own local credential
-/// store, so there are no API-key fields here.
+/// Settings dialog — pick the enabled vendors, primary vendor, color theme, and window opacity.
 /// </summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
-    public IReadOnlyList<VendorId> Vendors { get; } = VendorIdExtensions.All;
+    public ObservableCollection<VendorSettingItemVm> VendorOptions { get; }
+
+    [ObservableProperty] private ObservableCollection<VendorId> _availablePrimaryVendors = [];
+    [ObservableProperty] private string _vendorSummary = "";
+    [ObservableProperty] private bool _isVendorDropdownOpen;
 
     /// <summary>Theme entries with color swatches for the picker (see <see cref="ThemeOption"/>).</summary>
     public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeOption.All;
@@ -67,7 +70,63 @@ public sealed partial class SettingsViewModel : ObservableObject
         _originalOpacityAffectsTray = OpacityManager.AffectsTray;
 
         _launchAtStartup = config.Ui.LaunchAtStartup ?? false;
+
+        var vendorOptions = VendorIdExtensions.All
+            .Select(v => new VendorSettingItemVm(v, config.IsEnabled(v)))
+            .ToList();
+
+        foreach (var vo in vendorOptions)
+        {
+            vo.Toggled += (_, _) => OnVendorToggled(vo);
+        }
+
+        VendorOptions = new ObservableCollection<VendorSettingItemVm>(vendorOptions);
+        SyncAvailableVendors();
     }
+
+    private void OnVendorToggled(VendorSettingItemVm toggled)
+    {
+        // Enforce at least one vendor must remain active.
+        if (!VendorOptions.Any(v => v.IsEnabled))
+        {
+            toggled.IsEnabled = true;
+            return;
+        }
+
+        SyncAvailableVendors();
+    }
+
+    private void SyncAvailableVendors()
+    {
+        var enabled = VendorOptions.Where(v => v.IsEnabled).Select(v => v.Vendor).ToList();
+        AvailablePrimaryVendors = new ObservableCollection<VendorId>(enabled);
+
+        if (!AvailablePrimaryVendors.Contains(Primary))
+        {
+            Primary = AvailablePrimaryVendors.FirstOrDefault();
+        }
+
+        UpdateVendorSummary(enabled);
+    }
+
+    private void UpdateVendorSummary(IReadOnlyList<VendorId> enabled)
+    {
+        if (enabled.Count == VendorOptions.Count)
+        {
+            VendorSummary = $"All vendors ({enabled.Count}/{VendorOptions.Count})";
+        }
+        else if (enabled.Count == 1)
+        {
+            VendorSummary = $"{enabled[0].Label()} (1/{VendorOptions.Count})";
+        }
+        else
+        {
+            VendorSummary = $"{enabled.Count} of {VendorOptions.Count} active";
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleVendorDropdown() => IsVendorDropdownOpen = !IsVendorDropdownOpen;
 
     /// <summary>Live-preview the theme as soon as the user picks a new one.</summary>
     partial void OnThemeChanged(ThemeId value) => _themeService.Apply(value);
@@ -79,13 +138,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     partial void OnOpacityAffectsTrayChanged(bool value) => OpacityManager.Apply(Opacity, value);
 
     [RelayCommand]
-    private void Save()
+    private async Task SaveAsync()
     {
         try
         {
-            ConfigWriter.Save(AppPaths.ConfigFile, Primary, Theme, Opacity, OpacityAffectsTray, LaunchAtStartup);
-            // Register/unregister the OS auto-start entry to match the saved preference.
-            AutoStartManager.Apply(LaunchAtStartup);
+            var vendorMap = VendorOptions.ToDictionary(v => v.Vendor, v => v.IsEnabled);
+            await Task.Run(() =>
+            {
+                ConfigWriter.Save(AppPaths.ConfigFile, Primary, Theme, Opacity, OpacityAffectsTray, LaunchAtStartup, vendorMap);
+                // Register/unregister the OS auto-start entry to match the saved preference.
+                AutoStartManager.Apply(LaunchAtStartup);
+            });
             Status = $"Saved to {AppPaths.ConfigFile}";
             Saved?.Invoke(this, EventArgs.Empty);
         }

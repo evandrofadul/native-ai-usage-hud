@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AiUsageHud.Core\AiUsageHud.Core.csproj" />
+    <ProjectReference Include="..\AiUsageHud.Presentation\AiUsageHud.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

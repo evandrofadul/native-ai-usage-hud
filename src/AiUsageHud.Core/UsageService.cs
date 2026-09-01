@@ -38,7 +38,7 @@ public sealed class UsageService
         try
         {
             var fetcher = BuildFetcher(vendor);
-            var outcome = await fetcher.FetchAsync(ct);
+            var outcome = await Task.Run(() => fetcher.FetchAsync(ct), ct);
             var fetchedAt = outcome.CacheAge is { } age ? DateTimeOffset.UtcNow - age : (DateTimeOffset?)null;
             return new TabResult.Ready(outcome, fetchedAt);
         }

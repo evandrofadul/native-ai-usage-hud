@@ -465,6 +465,75 @@
                 </Style>
             </ControlTheme>
 
+            <!-- ============================================================
+                 Dropdown toggle button — looks identical to a closed ComboBox
+                 ============================================================ -->
+            <ControlTheme x:Key="DropdownHeaderToggle" TargetType="ToggleButton">
+                <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource Bg2Brush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="10,6"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="MinHeight" Value="34"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Border Name="Bd" CornerRadius="6"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter>
+                <Style Selector="^:pointerover /template/ Border#Bd">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Style>
+                <Style Selector="^:checked /template/ Border#Bd">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Style>
+                <Style Selector="^:disabled">
+                    <Setter Property="Opacity" Value="0.5"/>
+                </Style>
+            </ControlTheme>
+
+            <!-- Multi-select popup row item -->
+            <ControlTheme x:Key="VendorCheckMenuItem" TargetType="Button">
+                <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Padding" Value="8,7"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Border Name="Bd" Margin="3,1" CornerRadius="5"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter>
+                <Style Selector="^:pointerover /template/ Border#Bd">
+                    <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                </Style>
+                <Style Selector="^:pointerover">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                </Style>
+            </ControlTheme>
+
             <!-- Tray context-menu item (used by the custom tray popup window). -->
             <ControlTheme x:Key="TrayMenuItem" TargetType="Button">
                 <Setter Property="Background" Value="Transparent"/>

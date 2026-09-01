@@ -119,7 +119,7 @@ public sealed partial class MainViewModel : ObservableObject
                 var result = await _service.RefreshAsync(tab.Vendor);
                 tab.Apply(result, now, PaceTolerance);
                 await AttachTokensAsync(tab);
-            });
+            }).ToList();
             await Task.WhenAll(work);
             TrayChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -195,7 +195,7 @@ public sealed partial class MainViewModel : ObservableObject
         vm.Saved += async (_, _) =>
         {
             IsSettingsOpen = false;
-            var reloaded = LoadConfigSafe();
+            var reloaded = await Task.Run(LoadConfigSafe);
             await ReloadConfigAsync(reloaded);
         };
         vm.Cancelled += (_, _) => IsSettingsOpen = false;

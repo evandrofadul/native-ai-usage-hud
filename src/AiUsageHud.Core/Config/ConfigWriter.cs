@@ -15,11 +15,12 @@ namespace AiUsageHud.Core.Config;
 public static class ConfigWriter
 {
     /// <summary>
-    /// Persist <c>[ui].primary</c>, <c>[ui].theme</c> and the window/opacity/startup
+    /// Persist <c>[ui].primary</c>, <c>[ui].theme</c>, vendor enabled states and the window/opacity/startup
     /// preferences, preserving all surrounding comments and unrelated fields.
     /// </summary>
     public static void Save(string path, VendorId primary, ThemeId theme,
-        int? opacity = null, bool? opacityAffectsTray = null, bool? launchAtStartup = null)
+        int? opacity = null, bool? opacityAffectsTray = null, bool? launchAtStartup = null,
+        IReadOnlyDictionary<VendorId, bool>? vendorEnabled = null)
     {
         var text = File.Exists(path) ? File.ReadAllText(path) : "";
         var lines = text.Length == 0
@@ -32,6 +33,14 @@ public static class ConfigWriter
         if (opacity is { } op) SetKey(lines, "ui", "opacity", op.ToString(), quote: false);
         if (opacityAffectsTray is { } tray) SetKey(lines, "ui", "opacity_affects_tray", tray ? "true" : "false", quote: false);
         if (launchAtStartup is { } launch) SetKey(lines, "ui", "launch_at_startup", launch ? "true" : "false", quote: false);
+
+        if (vendorEnabled is not null)
+        {
+            foreach (var (vendor, isEnabled) in vendorEnabled)
+            {
+                SetKey(lines, vendor.Slug(), "enabled", isEnabled ? "true" : "false", quote: false);
+            }
+        }
 
         var sb = new StringBuilder();
         for (var i = 0; i < lines.Count; i++)

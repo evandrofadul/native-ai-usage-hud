@@ -68,4 +68,34 @@ public class ConfigWriterTests : IDisposable
         Assert.Equal(ThemeId.Nord, cfg.Ui.Theme);
         Assert.Equal("my-proj-42", cfg.Gemini.ProjectId);
     }
+
+    [Fact]
+    public void WritesVendorEnabledStateAndRoundTrips()
+    {
+        var enabledMap = new Dictionary<VendorId, bool>
+        {
+            [VendorId.Anthropic] = true,
+            [VendorId.Openai] = false,
+            [VendorId.Copilot] = true,
+            [VendorId.Gemini] = false,
+            [VendorId.Antigravity] = true,
+        };
+
+        ConfigWriter.Save(_path, VendorId.Copilot, ThemeId.OneDark, vendorEnabled: enabledMap);
+        var raw = File.ReadAllText(_path);
+
+        Assert.Contains("[anthropic]", raw);
+        Assert.Contains("[openai]", raw);
+        Assert.Contains("[copilot]", raw);
+        Assert.Contains("[gemini]", raw);
+        Assert.Contains("[antigravity]", raw);
+
+        var cfg = AppConfig.LoadFrom(_path);
+        Assert.True(cfg.IsEnabled(VendorId.Anthropic));
+        Assert.False(cfg.IsEnabled(VendorId.Openai));
+        Assert.True(cfg.IsEnabled(VendorId.Copilot));
+        Assert.False(cfg.IsEnabled(VendorId.Gemini));
+        Assert.True(cfg.IsEnabled(VendorId.Antigravity));
+        Assert.Equal(new[] { VendorId.Anthropic, VendorId.Copilot, VendorId.Antigravity }, cfg.EnabledVendors());
+    }
 }
